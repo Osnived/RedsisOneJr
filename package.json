@@ -1,0 +1,33 @@
+{
+  "name": "redsis-one-jr",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Plataforma empresarial modular",
+  "packageManager": "pnpm@11.9.0",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "test:cov": "turbo run test:cov",
+    "format": "prettier --write \"**/*.{ts,tsx,js,json,md,yml,yaml}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,json,md,yml,yaml}\"",
+    "db:generate": "pnpm --filter @redsis/api db:generate",
+    "db:migrate": "pnpm --filter @redsis/api db:migrate",
+    "db:deploy": "pnpm --filter @redsis/api db:deploy",
+    "db:seed": "pnpm --filter @redsis/api db:seed",
+    "db:reset": "pnpm --filter @redsis/api db:reset",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down",
+    "docker:logs": "docker compose logs -f"
+  },
+  "devDependencies": {
+    "prettier": "3.9.6",
+    "turbo": "2.10.7",
+    "typescript": "6.0.2"
+  }
+}

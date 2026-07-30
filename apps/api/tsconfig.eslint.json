@@ -1,0 +1,8 @@
+{
+  // Proyecto usado únicamente por ESLint: incluye las pruebas, que quedan
+  // fuera de la compilación de producción. Se redefine `exclude` porque
+  // el heredado descarta los archivos .spec.ts.
+  "extends": "./tsconfig.spec.json",
+  "include": ["src/**/*.ts", "prisma/**/*.ts", "prisma.config.ts"],
+  "exclude": ["node_modules", "dist"]
+}

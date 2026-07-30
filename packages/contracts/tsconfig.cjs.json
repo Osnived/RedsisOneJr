@@ -1,0 +1,13 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "module": "CommonJS",
+    // El backend compila a CommonJS y necesita esta salida. TypeScript 6 marca
+    // node10 como obsoleto pero sigue siendo la única resolución compatible con
+    // `module: CommonJS`; se silencia de forma explícita y acotada a esta build.
+    "moduleResolution": "Node10",
+    "ignoreDeprecations": "6.0",
+    "outDir": "./dist/cjs"
+  },
+  "exclude": ["node_modules", "dist", "**/*.spec.ts"]
+}

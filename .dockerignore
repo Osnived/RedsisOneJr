@@ -1,0 +1,16 @@
+**/node_modules
+**/dist
+**/build
+**/.turbo
+**/coverage
+**/.env
+**/.env.local
+**/*.log
+.git
+.github
+**/src/generated
+docs
+*.md
+
+# La carpeta certs/ debe llegar al build (certificados de confianza).
+!certs

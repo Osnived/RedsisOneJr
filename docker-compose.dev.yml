@@ -1,0 +1,29 @@
+name: redsis-one-jr-dev
+
+# Solo levanta la base de datos. El código se ejecuta en la máquina con
+# `pnpm dev` para conservar el recargado en caliente.
+#
+#   docker compose -f docker-compose.dev.yml up -d
+#   pnpm dev
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: redsis-postgres-dev
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: redsis
+      POSTGRES_PASSWORD: redsis
+      POSTGRES_DB: redsis
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres-dev-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U redsis -d redsis']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  postgres-dev-data:

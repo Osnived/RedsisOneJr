@@ -78,6 +78,20 @@ export function groupPermissionsByModule(
   return grouped;
 }
 
+/**
+ * Permiso tal como lo entrega la API.
+ *
+ * El catálogo vive en la base de datos además de en este archivo: la constante
+ * `PERMISSIONS` es la referencia para el código, y la tabla es lo que permite
+ * asignarlos a roles sin desplegar.
+ */
+export interface PermissionSummary {
+  id: string;
+  code: Permission;
+  module: string;
+  description: string | null;
+}
+
 /** Roles semilla del sistema. Los nombres pueden cambiar; el conjunto de permisos es lo importante. */
 export const SYSTEM_ROLES = {
   ADMINISTRATOR: 'administrador',

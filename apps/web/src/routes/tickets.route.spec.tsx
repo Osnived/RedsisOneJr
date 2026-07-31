@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { PERMISSIONS, type AuthTokens, type Permission } from '@redsis/contracts';
-import { DataTable } from '@/components/table';
-import { TABLE_IDS } from '@/lib/table/registry';
+import { AdvancedTable, DataTable } from '@/shared/components/table';
+import { TABLE_IDS } from '@/shared/lib/table/registry';
 import { getTicketRowId, ticketColumns } from '@/features/tickets/columns/ticket.columns';
 import { MOCK_TICKETS } from '@/features/tickets/mocks/tickets.mock';
 import { useAuthStore } from '@/stores/auth.store';
@@ -129,6 +129,85 @@ describe('Tabla de Tickets', () => {
     await user.click(screen.getByRole('button', { name: /Columnas/ }));
 
     expect(screen.getByLabelText('Buscar columna')).toBeInTheDocument();
+  });
+});
+
+/**
+ * Capacidades que la pantalla enciende. Se declaran aquí igual que en la ruta:
+ * si alguien las apaga por error, estas pruebas lo detectan.
+ */
+function renderAdvancedTicketsTable() {
+  return render(
+    <AdvancedTable
+      tableId={TABLE_IDS.TICKETS}
+      columns={ticketColumns}
+      data={MOCK_TICKETS}
+      getRowId={getTicketRowId}
+      searchPlaceholder="Buscar por ticket, cliente, sucursal..."
+      emptyMessage="No hay tickets que coincidan con la búsqueda"
+      capabilities={{ views: true, columnSettings: true, grouping: true, filters: true }}
+    />,
+  );
+}
+
+describe('Tickets con AdvancedTable', () => {
+  it('conserva todo lo que ya hacía con el BaseTable', () => {
+    renderAdvancedTicketsTable();
+
+    expect(screen.getByRole('searchbox')).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: /Ticket/ })).toBeInTheDocument();
+    expect(bodyRows()).toHaveLength(25);
+  });
+
+  it('ofrece la barra de vistas', () => {
+    renderAdvancedTicketsTable();
+
+    expect(screen.getByRole('toolbar', { name: 'Vistas guardadas' })).toBeInTheDocument();
+  });
+
+  it('ofrece el constructor de filtros', () => {
+    renderAdvancedTicketsTable();
+
+    expect(screen.getByRole('button', { name: /^Filtros,/ })).toBeInTheDocument();
+  });
+
+  it('agrupa por estado, técnico, prioridad y ciudad', () => {
+    renderAdvancedTicketsTable();
+
+    const selector = screen.getByRole('combobox', { name: 'Agrupar por' });
+
+    for (const label of ['Estado', 'Técnico', 'Prioridad', 'Ciudad']) {
+      expect(within(selector).getByRole('option', { name: label })).toBeInTheDocument();
+    }
+  });
+
+  it('no permite agrupar por el número de ticket', () => {
+    renderAdvancedTicketsTable();
+
+    const selector = screen.getByRole('combobox', { name: 'Agrupar por' });
+
+    // Daría un grupo por fila.
+    expect(within(selector).queryByRole('option', { name: 'Ticket' })).not.toBeInTheDocument();
+  });
+
+  it('agrupa mostrando la etiqueta del estado, no su código', async () => {
+    const user = userEvent.setup();
+    renderAdvancedTicketsTable();
+
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Agrupar por' }), 'status');
+
+    expect(screen.getByRole('button', { name: /^Grupo En ruta/ })).toBeInTheDocument();
+  });
+
+  it('abre el panel de columnas en lugar del desplegable', async () => {
+    const user = userEvent.setup();
+    renderAdvancedTicketsTable();
+
+    await user.click(screen.getByRole('button', { name: /^Columnas,/ }));
+
+    expect(
+      screen.getByRole('complementary', { name: 'Configuración de columnas' }),
+    ).toBeInTheDocument();
   });
 });
 

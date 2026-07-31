@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { RoleRepository, type RoleWithPermissions } from './role.repository';
+import type { RoleSummary } from '@redsis/contracts';
+import { RoleRepository } from './role.repository';
 
 /**
  * Consulta de roles. Los roles únicamente agrupan permisos: la autorización
@@ -9,11 +10,11 @@ import { RoleRepository, type RoleWithPermissions } from './role.repository';
 export class RolesService {
   constructor(private readonly roles: RoleRepository) {}
 
-  list(): Promise<RoleWithPermissions[]> {
+  list(): Promise<RoleSummary[]> {
     return this.roles.list();
   }
 
-  async findById(id: string): Promise<RoleWithPermissions> {
+  async findById(id: string): Promise<RoleSummary> {
     const role = await this.roles.findById(id);
 
     if (!role) {

@@ -1,11 +1,10 @@
 import { useState } from 'react';
 import { createRoute } from '@tanstack/react-router';
 import { PERMISSIONS, type Ticket } from '@redsis/contracts';
-import { Alert } from '@/components/ui/alert';
-import { Button } from '@/components/ui/button';
-import { DataTable } from '@/components/table';
-import { TABLE_IDS } from '@/lib/table/registry';
-import { getTicketRowId, ticketColumns } from '@/features/tickets/columns/ticket.columns';
+import { Alert } from '@/shared/components/ui/alert';
+import { Button } from '@/shared/components/ui/button';
+import { useViewMode } from '@/shared/hooks/use-view-mode';
+import { TicketView } from '@/features/tickets/views';
 import { useTickets } from '@/features/tickets/use-tickets';
 import { useAuthStore } from '@/stores/auth.store';
 import { authenticatedRoute } from './authenticated.route';
@@ -19,12 +18,13 @@ export const ticketsRoute = createRoute({
 /**
  * Pantalla de Tickets.
  *
- * Toda la funcionalidad de la tabla la aporta el framework: la página entrega
- * las columnas del módulo, los datos y el identificador de tabla.
+ * Consulta los datos una sola vez y decide cómo representarlos. Nada más: qué
+ * vista corresponde lo resuelve `useViewMode`, y cómo se dibuja cada una es
+ * asunto de la vista. La página no consulta el tamaño de la pantalla ni el rol.
  *
  * Los datos llegan por TanStack Query desde un servicio que hoy resuelve con
  * datos en memoria. Cuando se integre Baserow solo cambia el interior de ese
- * servicio: ni esta pantalla ni el DataTable se modifican.
+ * servicio: ni esta pantalla ni las vistas se modifican.
  */
 function TicketsPage(): React.JSX.Element {
   const can = useAuthStore((state) => state.can);
@@ -33,12 +33,16 @@ function TicketsPage(): React.JSX.Element {
   // Desaparece cuando exista el origen real.
   const [shouldFail, setShouldFail] = useState(false);
   const [selectedTickets, setSelectedTickets] = useState<Ticket[]>([]);
+  const [detailTicket, setDetailTicket] = useState<Ticket | null>(null);
 
   const ticketsQuery = useTickets({ shouldFail });
+  const { mode, reason } = useViewMode();
 
   if (!can(PERMISSIONS.TICKETS_VIEW)) {
     return <Alert variant="destructive">No tienes permiso para consultar tickets.</Alert>;
   }
+
+  const tickets = ticketsQuery.data ?? [];
 
   return (
     <div className="flex flex-col gap-6">
@@ -46,9 +50,7 @@ function TicketsPage(): React.JSX.Element {
         <div>
           <h1 className="text-2xl font-semibold">Tickets</h1>
           <p className="text-sm text-muted-foreground">
-            {ticketsQuery.isPending
-              ? 'Consultando...'
-              : `${ticketsQuery.data?.length ?? 0} incidentes registrados`}
+            {ticketsQuery.isPending ? 'Consultando...' : `${tickets.length} incidentes registrados`}
           </p>
         </div>
 
@@ -72,21 +74,30 @@ function TicketsPage(): React.JSX.Element {
         requerirá modificar esta pantalla.
       </Alert>
 
+      {/* El motivo se muestra porque una vista que cambia sola sin explicación
+          parece un fallo. Desaparecerá cuando el usuario pueda elegirla. */}
+      {mode === 'cards' ? <Alert>Vista de tarjetas ({reason}).</Alert> : null}
+
       {selectedTickets.length > 0 ? (
         <Alert>Seleccionados: {selectedTickets.map((ticket) => ticket.number).join(', ')}</Alert>
       ) : null}
 
-      <DataTable
-        tableId={TABLE_IDS.TICKETS}
-        columns={ticketColumns}
-        data={ticketsQuery.data ?? []}
-        getRowId={getTicketRowId}
+      {detailTicket ? (
+        <Alert>
+          Detalle de {detailTicket.number}: la pantalla de detalle todavía no existe.{' '}
+          <button type="button" className="underline" onClick={() => setDetailTicket(null)}>
+            Cerrar
+          </button>
+        </Alert>
+      ) : null}
+
+      <TicketView
+        kind={mode}
+        tickets={tickets}
         loading={ticketsQuery.isPending}
         error={ticketsQuery.error}
-        enableRowSelection
-        onRowSelectionChange={setSelectedTickets}
-        searchPlaceholder="Buscar por ticket, cliente, sucursal..."
-        emptyMessage="No hay tickets que coincidan con la búsqueda"
+        onViewDetail={setDetailTicket}
+        onSelectionChange={setSelectedTickets}
       />
     </div>
   );

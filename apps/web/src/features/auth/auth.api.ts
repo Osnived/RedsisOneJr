@@ -1,5 +1,5 @@
 import type { AuthenticatedUser, LoginInput, LoginResponse } from '@redsis/contracts';
-import { apiClient } from '@/lib/api-client';
+import { apiClient } from '@/shared/lib/api-client';
 
 /**
  * Servicios de datos del módulo de autenticación.

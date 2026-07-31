@@ -15,25 +15,45 @@ sobre cualquier decisión posterior:
 
 Base de la arquitectura funcionando de punta a punta:
 
-| Pieza                | Estado                                                       |
-| -------------------- | ------------------------------------------------------------ |
-| Monorepo             | pnpm workspaces + TurboRepo                                  |
-| Backend              | NestJS 11 con Repository + Provider                          |
-| Base de datos        | PostgreSQL 17 con Prisma 7                                   |
-| Frontend             | React 19 + Vite + TanStack Router/Query + Tailwind v4        |
-| Autenticación        | JWT con access token corto y refresh token rotativo          |
-| Autorización         | Basada en permisos, aplicada en el backend                   |
-| Trazabilidad         | Historial de actividad de las acciones relevantes            |
-| Contenedores         | Dockerfiles multi-stage + docker-compose                     |
-| Integración continua | GitHub Actions: formato, lint, tipos, pruebas e imágenes     |
-| Pruebas              | 105 pruebas unitarias (Jest en el backend, Vitest en el web) |
+| Pieza                | Estado                                                 |
+| -------------------- | ------------------------------------------------------ |
+| Monorepo             | pnpm workspaces + TurboRepo                            |
+| Backend              | NestJS 11 con Repository + Provider                    |
+| Base de datos        | PostgreSQL 17 con Prisma 7                             |
+| Frontend             | React 19 + Vite + TanStack Router/Query + Tailwind v4  |
+| Autenticación        | JWT con access token corto y refresh token rotativo    |
+| Autorización         | Basada en permisos, aplicada en el backend             |
+| Trazabilidad         | Historial de actividad de las acciones relevantes      |
+| Framework de tablas  | BaseTable usado por 4 módulos; AdvancedTable preparado |
+| Formularios          | Infraestructura compartida reutilizable                |
+| Usuarios             | CRUD completo de extremo a extremo                     |
+| Contenedores         | Escritos, **nunca construidos** (proxy TLS de la red)  |
+| Integración continua | Escrita, **sin verificar en verde**                    |
+| Pruebas              | 419 (Jest en el backend, Vitest en el web y contratos) |
+
+**Estado detallado, deuda conocida y próximas acciones:**
+[PROJECT_STATUS.md](PROJECT_STATUS.md)
+
+## Pantallas
+
+| Pantalla | Ruta           | Estado                                      |
+| -------- | -------------- | ------------------------------------------- |
+| Login    | `/login`       | Autenticación real                          |
+| Panel    | `/`            | Tarjetas con datos reales                   |
+| Tickets  | `/tickets`     | 25 tickets mock                             |
+| Usuarios | `/users`       | CRUD completo                               |
+| Roles    | `/roles`       | Solo lectura, solo administrador            |
+| Permisos | `/permissions` | Catálogo de 18 permisos, solo administrador |
 
 ## Estructura
 
 ```
 apps/
   api/                 Backend NestJS
-  web/                 Frontend React
+  web/
+    src/shared/        Infraestructura reutilizable (tablas, formularios, UI)
+    src/features/      Módulos del negocio
+    src/routes/        Páginas
 packages/
   contracts/           Tipos y esquemas Zod compartidos
 docs/

@@ -1,8 +1,14 @@
 import { createRoute } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
 import { PERMISSIONS } from '@redsis/contracts';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Spinner } from '@/components/ui/spinner';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/shared/components/ui/card';
+import { Spinner } from '@/shared/components/ui/spinner';
 import { usersApi } from '@/features/users/users.api';
 import { useAuthStore } from '@/stores/auth.store';
 import { authenticatedRoute } from './authenticated.route';

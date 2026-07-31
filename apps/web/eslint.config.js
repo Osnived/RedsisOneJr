@@ -37,7 +37,7 @@ export default tseslint.config(
   },
   {
     // El cliente HTTP es el único autorizado a usar fetch.
-    files: ['src/lib/api-client.ts'],
+    files: ['src/shared/lib/api-client.ts'],
     rules: { 'no-restricted-globals': 'off' },
   },
   {

@@ -1,12 +1,12 @@
 import { useForm } from 'react-hook-form';
 import { standardSchemaResolver } from '@hookform/resolvers/standard-schema';
 import { loginSchema, type LoginInput } from '@redsis/contracts';
-import { Alert } from '@/components/ui/alert';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Spinner } from '@/components/ui/spinner';
-import { ApiError } from '@/lib/api-client';
+import { Alert } from '@/shared/components/ui/alert';
+import { Button } from '@/shared/components/ui/button';
+import { Input } from '@/shared/components/ui/input';
+import { Label } from '@/shared/components/ui/label';
+import { Spinner } from '@/shared/components/ui/spinner';
+import { ApiError } from '@/shared/lib/api-client';
 import { useLogin } from './use-auth';
 
 /**

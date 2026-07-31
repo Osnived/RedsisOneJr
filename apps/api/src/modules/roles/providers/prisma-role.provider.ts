@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import type { Permission } from '@redsis/contracts';
+import type { Permission, RoleSummary } from '@redsis/contracts';
 import { PrismaService } from '../../../infrastructure/prisma/prisma.service';
-import { RoleRepository, type RoleWithPermissions } from '../role.repository';
+import { RoleRepository } from '../role.repository';
 
 const ROLE_SELECT = {
   id: true,
@@ -27,7 +27,7 @@ export class PrismaRoleProvider extends RoleRepository {
     super();
   }
 
-  async list(): Promise<RoleWithPermissions[]> {
+  async list(): Promise<RoleSummary[]> {
     const roles = await this.prisma.role.findMany({
       select: ROLE_SELECT,
       orderBy: { name: 'asc' },
@@ -36,13 +36,13 @@ export class PrismaRoleProvider extends RoleRepository {
     return roles.map((role) => this.toRole(role));
   }
 
-  async findById(id: string): Promise<RoleWithPermissions | null> {
+  async findById(id: string): Promise<RoleSummary | null> {
     const role = await this.prisma.role.findUnique({ where: { id }, select: ROLE_SELECT });
 
     return role ? this.toRole(role) : null;
   }
 
-  private toRole(role: PrismaRole): RoleWithPermissions {
+  private toRole(role: PrismaRole): RoleSummary {
     return {
       id: role.id,
       name: role.name,

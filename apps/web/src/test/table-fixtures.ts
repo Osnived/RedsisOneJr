@@ -1,4 +1,4 @@
-import type { ColumnDefinition } from '@/types/table';
+import type { ColumnDefinition } from '@/shared/types/table';
 
 /**
  * Datos de prueba del framework. Son deliberadamente genéricos: el framework no
@@ -43,6 +43,7 @@ export const DEMO_COLUMNS: ColumnDefinition<DemoRow>[] = [
     header: 'Activo',
     accessor: (row) => row.active,
     align: 'center',
+    groupable: true,
   },
   {
     id: 'notes',

@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import type { Permission } from '@redsis/contracts';
+import type { Permission, PermissionSummary } from '@redsis/contracts';
 import { PrismaService } from '../../../infrastructure/prisma/prisma.service';
-import { PermissionRepository, type PermissionRecord } from '../permission.repository';
+import { PermissionRepository } from '../permission.repository';
 
 @Injectable()
 export class PrismaPermissionProvider extends PermissionRepository {
@@ -9,7 +9,7 @@ export class PrismaPermissionProvider extends PermissionRepository {
     super();
   }
 
-  async list(): Promise<PermissionRecord[]> {
+  async list(): Promise<PermissionSummary[]> {
     const permissions = await this.prisma.permission.findMany({
       select: { id: true, code: true, module: true, description: true },
       orderBy: [{ module: 'asc' }, { code: 'asc' }],

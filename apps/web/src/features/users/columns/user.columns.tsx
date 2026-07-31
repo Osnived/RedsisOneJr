@@ -1,6 +1,6 @@
 import type { UserSummary } from '@redsis/contracts';
-import { Badge } from '@/components/ui/badge';
-import { defineColumns } from '@/lib/table/registry';
+import { Badge } from '@/shared/components/ui/badge';
+import { defineColumns } from '@/shared/lib/table/registry';
 
 /**
  * Columnas del módulo de Usuarios.

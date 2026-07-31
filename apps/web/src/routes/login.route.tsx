@@ -1,5 +1,11 @@
 import { createRoute, redirect } from '@tanstack/react-router';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/shared/components/ui/card';
 import { LoginForm } from '@/features/auth/login-form';
 import { useAuthStore } from '@/stores/auth.store';
 import { rootRoute } from './root.route';

@@ -2,6 +2,13 @@
 
 # Framework de Tabla Reutilizable
 
+> **Este backlog está TERMINADO.** Los 10 MVP se completaron.
+> El trabajo en curso vive en [RELEASE_0.5.md](RELEASE_0.5.md) y el estado actual
+> en [PROJECT_STATUS.md](PROJECT_STATUS.md).
+>
+> Se conserva porque documenta cómo se construyó el framework de tablas y por qué
+> se tomó cada decisión.
+
 ---
 
 # Reglas Generales

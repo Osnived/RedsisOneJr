@@ -1,6 +1,6 @@
 import { Controller, Get } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { PERMISSIONS } from '@redsis/contracts';
+import { PERMISSIONS, type PermissionSummary } from '@redsis/contracts';
 import { RequirePermissions } from '../../common/decorators/require-permissions.decorator';
 import { PermissionsService, type PermissionsByModule } from './permissions.service';
 
@@ -12,8 +12,18 @@ export class PermissionsController {
 
   @Get()
   @RequirePermissions(PERMISSIONS.PERMISSIONS_VIEW)
-  @ApiOperation({ summary: 'Listar el catálogo de permisos agrupado por módulo' })
-  list(): Promise<PermissionsByModule[]> {
+  @ApiOperation({ summary: 'Listar el catálogo completo de permisos' })
+  list(): Promise<PermissionSummary[]> {
+    return this.permissionsService.list();
+  }
+
+  @Get('by-module')
+  @RequirePermissions(PERMISSIONS.PERMISSIONS_VIEW)
+  @ApiOperation({
+    summary: 'Listar el catálogo agrupado por módulo',
+    description: 'Pensado para la pantalla de asignación de permisos a roles.',
+  })
+  listGroupedByModule(): Promise<PermissionsByModule[]> {
     return this.permissionsService.listGroupedByModule();
   }
 }

@@ -40,26 +40,40 @@ celdas propias es `.tsx`; uno sin render propio es `.ts`.
 
 ```
 src/
-  components/
-    ui/          Componentes de interfaz sin dominio (Button, Badge, Checkbox)
-    table/       Framework de tablas
+  shared/            Infraestructura reutilizable, sin dominio
+    components/
+      form/          EntityModal, EntityForm, FormField, FormFooter
+      layout/        AppShell
+      table/         BaseTable, AdvancedTable, RowActions y componentes internos
+      ui/            Button, Badge, Input, Select, Dialog, DropdownMenu...
+    hooks/           Hooks transversales
+    lib/             Lógica pura sin React y cliente HTTP
+    types/           Contratos del framework
   features/
     <dominio>/
-      columns/   Definición de columnas del módulo
-      mocks/     Datos de prueba, si aplica
-      <d>.api.ts Servicio de datos
-      use-<d>.ts Hook de consulta
-  hooks/         Hooks transversales
-  lib/           Lógica pura sin React
-  routes/        Páginas y árbol de rutas
-  stores/        Estado de cliente (Zustand)
-  types/         Tipos transversales
+      columns/       Definición de columnas del módulo
+      mocks/         Datos de prueba, si aplica
+      views/         Formas alternativas de presentar el módulo
+      <d>.api.ts     Servicio de datos
+      use-<d>.ts     Hook de consulta
+      <d>-form.tsx   Formulario, si el módulo lo tiene
+  routes/            Páginas y árbol de rutas
+  stores/            Estado de cliente (Zustand)
+  test/              Preparación y fixtures de pruebas
 ```
 
-Un módulo nuevo se crea dentro de `features/`, nunca en `modules/`: STACK.md
-exige Feature First y el proyecto ya sigue esa convención.
+La regla es binaria:
 
----
+- **Si no conoce ningún dominio, va en `shared/`.** El BaseTable no sabe qué es un
+  ticket.
+- **Si conoce un dominio, va en `features/<dominio>/`.** Las columnas de tickets
+  saben qué es un estado y de qué color se pinta.
+
+Un módulo nuevo se crea dentro de `features/`, nunca en `modules/`: STACK.md
+exige Feature First y el proyecto sigue esa convención.
+
+Las páginas de `routes/` **orquestan y no deciden**: entregan columnas, datos y
+callbacks. Cualquier regla que aparezca en una página pertenece a su feature.
 
 # Estructura del backend
 
@@ -120,6 +134,28 @@ componentes propios.
 
 Si una función no usa React, vive en `lib/` o en un archivo aparte y se prueba
 sin montar nada.
+
+## Las acciones las declara la feature, no el framework
+
+`RowActions` solo dibuja. Qué acciones existen, quién puede verlas y cuándo
+aplican se declara en la feature:
+
+```ts
+buildUserActions({ can, currentUserId, onEdit, onSetActive });
+```
+
+## Los formularios reutilizan la infraestructura compartida
+
+Ningún formulario monta su propio modal ni su propio pie de acciones. Se compone
+con `EntityModal` + `EntityForm` + `FormField`, y solo aporta qué campos existen y
+cómo se validan.
+
+## La forma del formulario puede diferir de la del contrato
+
+El formulario pide lo que el usuario espera rellenar; la API recibe lo que
+almacena. Cuando difieren, la conversión es explícita y vive en un solo sitio
+(`user-form.schema.ts` es el ejemplo: separa Nombre y Apellidos y los une al
+guardar).
 
 ## Sin `setState` dentro de un efecto
 

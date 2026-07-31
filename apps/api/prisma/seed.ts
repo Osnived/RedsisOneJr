@@ -35,7 +35,9 @@ const ROLE_PERMISSIONS: Record<string, readonly Permission[]> = {
   [SYSTEM_ROLES.SUPERVISOR]: [
     PERMISSIONS.DASHBOARD_VIEW,
     PERMISSIONS.USERS_VIEW,
-    PERMISSIONS.ROLES_VIEW,
+    // Roles y Permisos son administración de accesos: solo el administrador.
+    // Se consigue quitando el permiso, no comprobando el rol: la autorización
+    // nunca se basa en el cargo (ver AGENTS.md).
     PERMISSIONS.TICKETS_VIEW,
     PERMISSIONS.TICKETS_CREATE,
     PERMISSIONS.TICKETS_EDIT,

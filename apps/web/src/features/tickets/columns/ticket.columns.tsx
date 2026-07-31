@@ -5,8 +5,8 @@ import {
   type TicketPriority,
   type TicketStatus,
 } from '@redsis/contracts';
-import { Badge, type BadgeVariant } from '@/components/ui/badge';
-import { defineColumns } from '@/lib/table/registry';
+import { Badge, type BadgeVariant } from '@/shared/components/ui/badge';
+import { defineColumns } from '@/shared/lib/table/registry';
 
 /**
  * Columnas del módulo de Tickets.
@@ -41,6 +41,17 @@ const PRIORITY_VARIANT: Record<TicketPriority, BadgeVariant> = {
   critica: 'danger',
 };
 
+/**
+ * Traduce un código a su etiqueta cuando se agrupa.
+ *
+ * El valor llega como `unknown` porque el framework no conoce el dominio; si no
+ * corresponde a ningún código conocido se muestra tal cual en lugar de vacío,
+ * que ocultaría un dato inesperado en vez de delatarlo.
+ */
+function labelOf(labels: Record<string, string>, value: unknown): string {
+  return typeof value === 'string' ? (labels[value] ?? value) : String(value);
+}
+
 export const ticketColumns = defineColumns<Ticket>([
   {
     id: 'number',
@@ -68,6 +79,7 @@ export const ticketColumns = defineColumns<Ticket>([
     header: 'Ciudad',
     accessor: (ticket) => ticket.city,
     width: 140,
+    groupable: true,
   },
   {
     id: 'status',
@@ -77,6 +89,10 @@ export const ticketColumns = defineColumns<Ticket>([
     accessor: (ticket) => ticket.status,
     width: 130,
     align: 'center',
+    groupable: true,
+    // El grupo debe leerse "En ruta", no "en-ruta": traducir el código es
+    // conocimiento del dominio y por eso vive aquí.
+    groupLabel: (value) => labelOf(TICKET_STATUS_LABELS, value),
     cell: (ticket) => (
       <Badge variant={STATUS_VARIANT[ticket.status]}>{TICKET_STATUS_LABELS[ticket.status]}</Badge>
     ),
@@ -87,6 +103,8 @@ export const ticketColumns = defineColumns<Ticket>([
     accessor: (ticket) => ticket.priority,
     width: 120,
     align: 'center',
+    groupable: true,
+    groupLabel: (value) => labelOf(TICKET_PRIORITY_LABELS, value),
     cell: (ticket) => (
       <Badge variant={PRIORITY_VARIANT[ticket.priority]}>
         {TICKET_PRIORITY_LABELS[ticket.priority]}
@@ -98,6 +116,7 @@ export const ticketColumns = defineColumns<Ticket>([
     header: 'Técnico',
     accessor: (ticket) => ticket.technicianName,
     width: 170,
+    groupable: true,
   },
   {
     id: 'createdAt',

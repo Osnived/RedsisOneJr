@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { passwordSchema } from './password.js';
 
 export const loginSchema = z.object({
   email: z
@@ -21,12 +22,7 @@ export type RefreshTokenInput = z.infer<typeof refreshTokenSchema>;
 export const changePasswordSchema = z
   .object({
     currentPassword: z.string().min(1, 'La contraseña actual es obligatoria'),
-    newPassword: z
-      .string()
-      .min(8, 'La nueva contraseña debe tener al menos 8 caracteres')
-      .regex(/[a-z]/, 'Debe incluir al menos una letra minúscula')
-      .regex(/[A-Z]/, 'Debe incluir al menos una letra mayúscula')
-      .regex(/\d/, 'Debe incluir al menos un número'),
+    newPassword: passwordSchema,
     confirmPassword: z.string().min(1, 'Debe confirmar la nueva contraseña'),
   })
   .refine((data) => data.newPassword === data.confirmPassword, {

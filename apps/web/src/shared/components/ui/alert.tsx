@@ -1,0 +1,21 @@
+import { cva, type VariantProps } from 'class-variance-authority';
+import type { ComponentProps } from 'react';
+import { cn } from '@/shared/lib/utils';
+
+const alertVariants = cva('rounded-md border px-4 py-3 text-sm', {
+  variants: {
+    variant: {
+      default: 'border-border bg-muted text-foreground',
+      destructive: 'border-destructive/40 bg-destructive/10 text-destructive',
+    },
+  },
+  defaultVariants: {
+    variant: 'default',
+  },
+});
+
+type AlertProps = ComponentProps<'div'> & VariantProps<typeof alertVariants>;
+
+export function Alert({ className, variant, ...props }: AlertProps): React.JSX.Element {
+  return <div role="alert" className={cn(alertVariants({ variant }), className)} {...props} />;
+}

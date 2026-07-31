@@ -1,17 +1,13 @@
-import type { Permission } from '@redsis/contracts';
+import type { RoleSummary } from '@redsis/contracts';
 
-export interface RoleWithPermissions {
-  id: string;
-  name: string;
-  description: string | null;
-  isSystem: boolean;
-  permissions: Permission[];
-  userCount: number;
-}
-
-/** Contrato de acceso a roles. */
+/**
+ * Contrato de acceso a roles.
+ *
+ * Devuelve `RoleSummary` de @redsis/contracts y no un tipo propio: así el
+ * frontend y el backend describen el rol una sola vez y no pueden desviarse.
+ */
 export abstract class RoleRepository {
-  abstract list(): Promise<RoleWithPermissions[]>;
+  abstract list(): Promise<RoleSummary[]>;
 
-  abstract findById(id: string): Promise<RoleWithPermissions | null>;
+  abstract findById(id: string): Promise<RoleSummary | null>;
 }

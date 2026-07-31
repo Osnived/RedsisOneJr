@@ -1,28 +1,30 @@
 import { Injectable } from '@nestjs/common';
-import { PermissionRepository, type PermissionRecord } from './permission.repository';
+import type { PermissionSummary } from '@redsis/contracts';
+import { PermissionRepository } from './permission.repository';
 
 export interface PermissionsByModule {
   module: string;
-  permissions: PermissionRecord[];
+  permissions: PermissionSummary[];
 }
 
 /**
  * Expone el catálogo de permisos.
  *
- * Se entrega agrupado por módulo porque así lo consume la pantalla de roles:
- * agrupar en el backend evita repetir esa lógica en cada cliente.
+ * Se ofrecen las dos formas a propósito: la lista plana la consume una tabla, y
+ * la agrupada por módulo la consumirá la pantalla de asignación a roles. Agrupar
+ * en el backend evita repetir esa lógica en cada cliente.
  */
 @Injectable()
 export class PermissionsService {
   constructor(private readonly permissions: PermissionRepository) {}
 
-  list(): Promise<PermissionRecord[]> {
+  list(): Promise<PermissionSummary[]> {
     return this.permissions.list();
   }
 
   async listGroupedByModule(): Promise<PermissionsByModule[]> {
     const permissions = await this.permissions.list();
-    const groups = new Map<string, PermissionRecord[]>();
+    const groups = new Map<string, PermissionSummary[]>();
 
     for (const permission of permissions) {
       const bucket = groups.get(permission.module);

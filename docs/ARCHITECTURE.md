@@ -156,7 +156,7 @@ existen:
 | `auth`         | Login, renovación, cierre de sesión       |
 | `users`        | Alta, consulta, edición y desactivación   |
 | `roles`        | Consulta de roles y sus permisos          |
-| `permissions`  | Catálogo de permisos agrupado por módulo  |
+| `permissions`  | Catálogo de permisos, plano y agrupado    |
 | `activity-log` | Historial de actividad                    |
 | `health`       | Estado del servicio y de la base de datos |
 
@@ -171,6 +171,108 @@ Para añadir un módulo:
 
 Un módulo nunca accede a los datos de otro directamente: se comunica a través de
 los servicios que el otro módulo exporta.
+
+## Framework de tablas
+
+Toda tabla de la plataforma se dibuja con el mismo componente. Vive en
+`shared/components/table/` y no conoce ningún dominio.
+
+```
+ColumnDefinition (la feature)  ->  column-adapter  ->  TanStack Table
+                                        |
+                            componentes de presentación
+```
+
+Tres decisiones sostienen el diseño:
+
+- **Las columnas las declara la feature**, en `features/<dominio>/columns/`. Añadir
+  un módulo es añadir un archivo; el DataTable no se toca. Cuatro módulos ya lo
+  usan sin haberlo modificado nunca.
+- **Solo tres componentes conocen TanStack** (cabecera, cuerpo y selector de
+  columnas), porque son los que renderizan su salida. El resto —barra, paginación,
+  búsqueda, estados, selección— recibe datos planos y funcionaría con otro motor.
+- **`AdvancedTable` extiende por composición, no por copia.** Delega en
+  `DataTable` y solo añade las capacidades avanzadas a su alrededor. Mejorar el
+  BaseTable mejora también la avanzada, que es justo lo que se perdería con una
+  implementación paralela.
+
+Las preferencias del usuario (columnas visibles, anchos, orden, búsqueda, página,
+filtros, agrupación y vista activa) se persisten solas a través de
+`useTablePreferences`. Ningún componente accede al almacenamiento: eso permitió
+construir el selector de columnas sin que sepa siquiera que existe `localStorage`.
+
+### El contexto de tabla
+
+Hay controles que gobiernan la tabla sin estar dentro de ella: el panel de
+columnas se dibuja al lado, y la barra de vistas encima. Un hermano no puede leer
+el estado de otro, y exponerlo hacia arriba obligaría a que cada capacidad
+añadiera su propia propiedad.
+
+`TableProvider` monta el motor y lo comparte; `DataTableView` lo dibuja. La tabla
+y sus controles laterales comparten una sola instancia y una sola fuente de
+preferencias.
+
+```
+TableProvider  ->  DataTableView      (la tabla)
+               ->  ColumnSettingsPanel (al lado)
+               ->  ViewsBar / FilterBuilder / GroupingSelector
+```
+
+`DataTable` compone las dos piezas y conserva su API pública intacta, así que los
+módulos administrativos no se enteraron del cambio.
+
+### Capacidades avanzadas
+
+Se declaran todas desde el principio en `AdvancedTableCapabilities` y se enciende
+cada una por separado. `IMPLEMENTED_CAPABILITIES` dice cuáles existen ya; activar
+una pendiente avisa por consola en lugar de no hacer nada en silencio.
+
+Los filtros avanzados no se resuelven dentro del motor: `applyAdvancedFilters` es
+una función pura que filtra los datos antes de entregárselos. La semántica de los
+siete operadores queda en un solo archivo y se prueba sin montar nada.
+
+## Vista adaptativa y multi vista
+
+Un módulo puede representarse de más de una forma. Qué forma corresponde lo
+decide `useViewMode()`, que devuelve `mode` y `reason`.
+
+La decisión no es solo del tamaño de pantalla: entran el rol y, en el futuro, la
+preferencia del usuario. `useIsMobile` es el único sitio de la aplicación que mira
+el tamaño de la ventana; ninguna página lo consulta.
+
+Cada módulo con varias vistas registra las suyas:
+
+```
+features/tickets/views/
+  ticket-view.types.ts   contrato que cumple toda vista
+  ticket-table-view.tsx  registrada como 'table'
+  ticket-card-view.tsx   registrada como 'cards'
+  index.ts               registro y resolución
+```
+
+La página consulta los datos una sola vez y los entrega a la vista elegida. Eso es
+lo que garantiza que todas consuman el mismo Repository, el mismo Provider y la
+misma consulta de React Query: solo cambia cómo dibujan la información.
+
+Añadir Kanban, Calendario, Timeline o Mapa es escribir un componente que cumpla
+`TicketViewProps` y registrarlo. Están declarados en `ViewKind` y ausentes de
+`IMPLEMENTED_VIEW_KINDS`; pedir uno que aún no existe cae a la tabla en lugar de
+dejar la pantalla en blanco.
+
+## Infraestructura de formularios
+
+`shared/components/form/` concentra lo que todo formulario necesita y es fácil
+resolver distinto cada vez: el modal, dónde se muestra el error del servidor, el
+comportamiento de los botones al guardar y el cableado de accesibilidad de cada
+campo.
+
+Un formulario de dominio solo aporta qué campos existen y cómo se validan. La
+validación usa el esquema Zod del contrato compartido, así que el frontend y el
+backend no pueden discrepar sobre qué es válido.
+
+Cuando la forma del formulario difiere de la del contrato —el formulario pide
+Nombre y Apellidos, el backend almacena un único `fullName`— la conversión es
+explícita y vive en un solo archivo.
 
 ## Configuración
 

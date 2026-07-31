@@ -21,6 +21,7 @@ import {
   useUpdateUser,
 } from '@/features/users/use-user-mutations';
 import { useRoles } from '@/features/roles/use-roles';
+import { useAuthorization } from '@/shared/hooks/use-authorization';
 import { useAuthStore } from '@/stores/auth.store';
 import { authenticatedRoute } from './authenticated.route';
 
@@ -43,7 +44,7 @@ type FormState = { mode: 'closed' } | { mode: 'create' } | { mode: 'edit'; user:
  * infraestructura compartida.
  */
 function UsersPage(): React.JSX.Element {
-  const can = useAuthStore((state) => state.can);
+  const auth = useAuthorization();
   const currentUserId = useAuthStore((state) => state.user?.id);
 
   const [formState, setFormState] = useState<FormState>({ mode: 'closed' });
@@ -56,7 +57,7 @@ function UsersPage(): React.JSX.Element {
   const updateUser = useUpdateUser();
   const setUserActive = useSetUserActive();
 
-  if (!can(PERMISSIONS.USERS_VIEW)) {
+  if (!auth.can(PERMISSIONS.USERS_VIEW)) {
     return <Alert variant="destructive">No tienes permiso para consultar usuarios.</Alert>;
   }
 
@@ -83,7 +84,7 @@ function UsersPage(): React.JSX.Element {
   };
 
   const actions = buildUserActions({
-    can,
+    can: auth.can,
     currentUserId,
     onEdit: (user) => setFormState({ mode: 'edit', user }),
     onSetActive: (user, isActive) => setUserActive.mutate({ id: user.id, isActive }),
@@ -113,7 +114,7 @@ function UsersPage(): React.JSX.Element {
         emptyMessage="No hay usuarios registrados"
         rowActions={(user) => <RowActions row={user} actions={actions} />}
         toolbar={
-          can(PERMISSIONS.USERS_CREATE) ? (
+          auth.can(PERMISSIONS.USERS_CREATE) ? (
             <Button size="sm" onClick={() => setFormState({ mode: 'create' })}>
               <Plus aria-hidden="true" />
               Nuevo usuario

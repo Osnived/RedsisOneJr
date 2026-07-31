@@ -1,12 +1,14 @@
 import { Controller, Get, Query } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { PERMISSIONS, type PaginatedResult } from '@redsis/contracts';
+import { APP_MODULES, PERMISSIONS, type PaginatedResult } from '@redsis/contracts';
+import { RequireModule } from '../../common/decorators/require-module.decorator';
 import { RequirePermissions } from '../../common/decorators/require-permissions.decorator';
 import { PaginationQueryDto } from '../../common/dto/pagination-query.dto';
 import { ActivityLogService, type ActivityLogView } from './activity-log.service';
 
 @ApiTags('Registro de actividad')
 @ApiBearerAuth()
+@RequireModule(APP_MODULES.SECURITY)
 @Controller('activity-logs')
 export class ActivityLogController {
   constructor(private readonly activityLog: ActivityLogService) {}

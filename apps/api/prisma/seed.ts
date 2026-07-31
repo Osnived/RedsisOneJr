@@ -9,10 +9,13 @@ import 'dotenv/config';
 import { hash } from 'bcrypt';
 import { PrismaPg } from '@prisma/adapter-pg';
 import {
+  ALL_APP_MODULES,
   ALL_PERMISSIONS,
+  APP_MODULES,
   PERMISSIONS,
   SYSTEM_ROLES,
   getPermissionModule,
+  type AppModule,
   type Permission,
 } from '@redsis/contracts';
 import { PrismaClient } from '../src/generated/prisma/client';
@@ -29,7 +32,14 @@ const ADMIN_EMAIL = process.env['SEED_ADMIN_EMAIL'] ?? 'admin@redsis.com';
 const ADMIN_PASSWORD = process.env['SEED_ADMIN_PASSWORD'] ?? 'Redsis2026';
 const ADMIN_NAME = process.env['SEED_ADMIN_NAME'] ?? 'Administrador';
 
-/** Permisos que recibe cada rol del sistema. El administrador recibe todos. */
+/**
+ * Permisos que recibe cada rol del sistema.
+ *
+ * El administrador se marca además con `hasFullAccess`: su acceso se calcula a
+ * partir del catálogo en lugar de leerse de estas tablas. Se le siguen guardando
+ * las filas para que la base de datos sea coherente al mirarla, pero la garantía
+ * de que lo ve todo no depende de ellas.
+ */
 const ROLE_PERMISSIONS: Record<string, readonly Permission[]> = {
   [SYSTEM_ROLES.ADMINISTRATOR]: ALL_PERMISSIONS,
   [SYSTEM_ROLES.SUPERVISOR]: [
@@ -50,6 +60,24 @@ const ROLE_PERMISSIONS: Record<string, readonly Permission[]> = {
     PERMISSIONS.TICKETS_EDIT,
     PERMISSIONS.MAPS_VIEW,
   ],
+};
+
+/**
+ * Módulos a los que entra cada rol del sistema.
+ *
+ * El acceso al módulo es la primera puerta: sin él, los permisos del módulo no
+ * se evalúan. Por eso el supervisor no recibe Seguridad aunque el catálogo lo
+ * declare, y no hace falta comprobar su cargo en ningún sitio.
+ */
+const ROLE_MODULES: Record<string, readonly AppModule[]> = {
+  [SYSTEM_ROLES.ADMINISTRATOR]: ALL_APP_MODULES,
+  [SYSTEM_ROLES.SUPERVISOR]: [
+    APP_MODULES.DASHBOARD,
+    APP_MODULES.TICKETS,
+    APP_MODULES.USERS,
+    APP_MODULES.MAPS,
+  ],
+  [SYSTEM_ROLES.TECHNICIAN]: [APP_MODULES.DASHBOARD, APP_MODULES.TICKETS, APP_MODULES.MAPS],
 };
 
 const ROLE_DESCRIPTIONS: Record<string, string> = {
@@ -79,8 +107,18 @@ async function seedRoles(permissionIds: Map<Permission, string>): Promise<Map<st
   for (const [name, permissions] of Object.entries(ROLE_PERMISSIONS)) {
     const role = await prisma.role.upsert({
       where: { name },
-      update: { description: ROLE_DESCRIPTIONS[name] ?? null, isSystem: true },
-      create: { name, description: ROLE_DESCRIPTIONS[name] ?? null, isSystem: true },
+      update: {
+        description: ROLE_DESCRIPTIONS[name] ?? null,
+        isSystem: true,
+        isActive: true,
+        hasFullAccess: name === SYSTEM_ROLES.ADMINISTRATOR,
+      },
+      create: {
+        name,
+        description: ROLE_DESCRIPTIONS[name] ?? null,
+        isSystem: true,
+        hasFullAccess: name === SYSTEM_ROLES.ADMINISTRATOR,
+      },
       select: { id: true },
     });
 
@@ -94,8 +132,15 @@ async function seedRoles(permissionIds: Map<Permission, string>): Promise<Map<st
         .map((permissionId) => ({ roleId: role.id, permissionId })),
     });
 
+    const modules = ROLE_MODULES[name] ?? [];
+
+    await prisma.roleModule.deleteMany({ where: { roleId: role.id } });
+    await prisma.roleModule.createMany({
+      data: modules.map((module) => ({ roleId: role.id, module })),
+    });
+
     roleIds.set(name, role.id);
-    console.log(`  rol ${name}: ${permissions.length} permisos`);
+    console.log(`  rol ${name}: ${modules.length} módulos, ${permissions.length} permisos`);
   }
 
   return roleIds;

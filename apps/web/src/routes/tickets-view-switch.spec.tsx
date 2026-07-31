@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import {
+  ALL_APP_MODULES,
   PERMISSIONS,
   SYSTEM_ROLES,
   type AuthTokens,
@@ -26,6 +27,7 @@ function authenticateWithRole(role: string): void {
     fullName: 'Persona',
     isActive: true,
     roles: [role],
+    modules: ALL_APP_MODULES.slice(),
     permissions: [PERMISSIONS.TICKETS_VIEW],
   };
 
@@ -140,6 +142,7 @@ describe('cambio automático de vista en Tickets', () => {
         fullName: 'Otra',
         isActive: true,
         roles: [SYSTEM_ROLES.TECHNICIAN],
+        modules: ALL_APP_MODULES.slice(),
         permissions: [],
       },
       TOKENS,

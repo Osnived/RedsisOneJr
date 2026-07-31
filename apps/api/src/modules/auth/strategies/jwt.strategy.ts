@@ -2,7 +2,7 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
-import type { JwtPayload, Permission } from '@redsis/contracts';
+import { isAppModule, isPermission, type JwtPayload } from '@redsis/contracts';
 import type { Env } from '../../../config/env.schema';
 import type { RequestUser } from '../../../common/types/request-user';
 
@@ -28,11 +28,15 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
       throw new UnauthorizedException('El token no identifica a ningún usuario');
     }
 
+    // Se filtra contra los catálogos en lugar de afirmar el tipo: el token lo
+    // firmamos nosotros, pero es una entrada del exterior y en una superficie de
+    // autorización no se dan por buenos los valores sin comprobarlos.
     return {
       id: payload.sub,
       email: payload.email,
       roles: payload.roles ?? [],
-      permissions: (payload.permissions ?? []) as Permission[],
+      modules: (payload.modules ?? []).filter(isAppModule),
+      permissions: (payload.permissions ?? []).filter(isPermission),
     };
   }
 }

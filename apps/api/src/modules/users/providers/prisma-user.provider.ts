@@ -1,5 +1,11 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import type { Permission } from '@redsis/contracts';
+import {
+  ALL_APP_MODULES,
+  ALL_PERMISSIONS,
+  isAppModule,
+  type AppModule,
+  type Permission,
+} from '@redsis/contracts';
 import { PrismaService } from '../../../infrastructure/prisma/prisma.service';
 import { UserRepository } from '../user.repository';
 import type {
@@ -21,10 +27,15 @@ const USER_WITH_ACCESS_SELECT = {
   createdAt: true,
   passwordHash: true,
   roles: {
+    // Solo los roles activos otorgan acceso: desactivar un rol debe retirar lo
+    // que concede sin tener que quitárselo a cada usuario.
+    where: { role: { isActive: true } },
     select: {
       role: {
         select: {
           name: true,
+          hasFullAccess: true,
+          modules: { select: { module: true } },
           permissions: { select: { permission: { select: { code: true } } } },
         },
       },
@@ -40,7 +51,14 @@ type PrismaUserWithAccess = {
   lastLoginAt: Date | null;
   createdAt: Date;
   passwordHash: string;
-  roles: { role: { name: string; permissions: { permission: { code: string } }[] } }[];
+  roles: {
+    role: {
+      name: string;
+      hasFullAccess: boolean;
+      modules: { module: string }[];
+      permissions: { permission: { code: string } }[];
+    };
+  }[];
 };
 
 /**
@@ -195,6 +213,7 @@ export class PrismaUserProvider extends UserRepository {
     return {
       ...this.toUserAccount(user),
       roles: user.roles.map((entry) => entry.role.name),
+      modules: this.collectModules(user),
       permissions: this.collectPermissions(user),
     };
   }
@@ -203,8 +222,35 @@ export class PrismaUserProvider extends UserRepository {
     return { ...this.toUserWithAccess(user), passwordHash: user.passwordHash };
   }
 
+  /**
+   * Módulos a los que llega el usuario por sus roles.
+   *
+   * Con varios roles los accesos se acumulan. Es el único cálculo del acceso
+   * efectivo a módulos, y por eso es el sitio donde entrarían la herencia, la
+   * vigencia o el alcance cuando se implementen.
+   */
+  private collectModules(user: PrismaUserWithAccess): AppModule[] {
+    if (hasFullAccess(user)) {
+      return [...ALL_APP_MODULES];
+    }
+
+    const modules = new Set<string>();
+
+    for (const { role } of user.roles) {
+      for (const { module } of role.modules) {
+        modules.add(module);
+      }
+    }
+
+    return [...modules].filter(isAppModule).sort();
+  }
+
   /** Un permiso puede llegar por varios roles; se devuelve sin duplicados. */
   private collectPermissions(user: PrismaUserWithAccess): Permission[] {
+    if (hasFullAccess(user)) {
+      return [...ALL_PERMISSIONS];
+    }
+
     const codes = new Set<string>();
 
     for (const { role } of user.roles) {
@@ -215,4 +261,15 @@ export class PrismaUserProvider extends UserRepository {
 
     return [...codes].sort() as Permission[];
   }
+}
+
+/**
+ * Si alguno de los roles activos del usuario concede acceso total.
+ *
+ * Cuando lo hay se entrega el catálogo completo sin mirar lo almacenado: es lo
+ * que garantiza que quien administra la plataforma no se quede fuera por una
+ * configuración incompleta, y que un módulo nuevo lo tenga desde que existe.
+ */
+function hasFullAccess(user: PrismaUserWithAccess): boolean {
+  return user.roles.some((entry) => entry.role.hasFullAccess);
 }

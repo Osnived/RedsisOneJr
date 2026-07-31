@@ -1,64 +1,20 @@
 import { Link, useRouterState } from '@tanstack/react-router';
-import { KeyRound, LayoutDashboard, LogOut, ShieldCheck, Ticket, Users } from 'lucide-react';
-import type { Permission } from '@redsis/contracts';
-import { PERMISSIONS } from '@redsis/contracts';
+import { LogOut } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import { Spinner } from '@/shared/components/ui/spinner';
+import { useAuthorization } from '@/shared/hooks/use-authorization';
 import { useLogout } from '@/features/auth/use-auth';
 import { useAuthStore } from '@/stores/auth.store';
 import { cn } from '@/shared/lib/utils';
-
-interface NavigationItem {
-  to: string;
-  label: string;
-  icon: typeof LayoutDashboard;
-  permission: Permission;
-}
-
-/**
- * El menú se declara junto con el permiso que lo habilita: añadir un módulo
- * es añadir una entrada, sin tocar la lógica de navegación.
- */
-const NAVIGATION: NavigationItem[] = [
-  {
-    to: '/',
-    label: 'Panel',
-    icon: LayoutDashboard,
-    permission: PERMISSIONS.DASHBOARD_VIEW,
-  },
-  {
-    to: '/tickets',
-    label: 'Tickets',
-    icon: Ticket,
-    permission: PERMISSIONS.TICKETS_VIEW,
-  },
-  {
-    to: '/users',
-    label: 'Usuarios',
-    icon: Users,
-    permission: PERMISSIONS.USERS_VIEW,
-  },
-  {
-    to: '/roles',
-    label: 'Roles',
-    icon: ShieldCheck,
-    permission: PERMISSIONS.ROLES_VIEW,
-  },
-  {
-    to: '/permissions',
-    label: 'Permisos',
-    icon: KeyRound,
-    permission: PERMISSIONS.PERMISSIONS_VIEW,
-  },
-];
+import { buildNavigation, type NavigationItem } from './navigation';
 
 export function AppShell({ children }: { children: React.ReactNode }): React.JSX.Element {
   const user = useAuthStore((state) => state.user);
-  const can = useAuthStore((state) => state.can);
+  const auth = useAuthorization();
   const logout = useLogout();
   const currentPath = useRouterState({ select: (state) => state.location.pathname });
 
-  const visibleItems = NAVIGATION.filter((item) => can(item.permission));
+  const visibleItems = buildNavigation(auth);
 
   return (
     <div className="flex min-h-screen flex-col md:flex-row">
@@ -72,7 +28,7 @@ export function AppShell({ children }: { children: React.ReactNode }): React.JSX
 
         <nav className="flex flex-1 flex-col gap-1 px-3" aria-label="Navegación principal">
           {visibleItems.map((item) => (
-            <SidebarLink key={item.to} item={item} isActive={currentPath === item.to} />
+            <SidebarLink key={item.module} item={item} isActive={currentPath === item.to} />
           ))}
         </nav>
 
@@ -113,7 +69,7 @@ export function AppShell({ children }: { children: React.ReactNode }): React.JSX
         >
           {visibleItems.map((item) => (
             <Link
-              key={item.to}
+              key={item.module}
               to={item.to}
               className={cn(
                 'flex flex-1 flex-col items-center gap-1 py-2 text-xs',

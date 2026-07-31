@@ -1,4 +1,4 @@
-import type { Permission } from '@redsis/contracts';
+import type { AppModule, Permission } from '@redsis/contracts';
 
 /**
  * Representación de dominio de un usuario.
@@ -17,15 +17,19 @@ export interface UserAccount {
 }
 
 /** Usuario junto con sus credenciales. Solo lo usa el flujo de autenticación. */
-export interface UserWithCredentials extends UserAccount {
+export interface UserWithCredentials extends UserWithAccess {
   passwordHash: string;
-  roles: string[];
-  permissions: Permission[];
 }
 
-/** Usuario junto con los accesos efectivos que otorgan sus roles. */
+/**
+ * Usuario junto con los accesos efectivos que otorgan sus roles activos.
+ *
+ * `modules` y `permissions` ya vienen resueltos y acumulados: nadie fuera del
+ * Provider necesita saber de qué rol viene cada acceso.
+ */
 export interface UserWithAccess extends UserAccount {
   roles: string[];
+  modules: AppModule[];
   permissions: Permission[];
 }
 

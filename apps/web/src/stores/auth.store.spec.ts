@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { PERMISSIONS, type AuthTokens, type AuthenticatedUser } from '@redsis/contracts';
+import type { AuthTokens, AuthenticatedUser } from '@redsis/contracts';
 import { useAuthStore } from './auth.store';
 
 const TOKENS: AuthTokens = {
@@ -15,9 +15,16 @@ function buildUser(permissions: string[] = []): AuthenticatedUser {
     fullName: 'Administrador',
     isActive: true,
     roles: ['administrador'],
+    modules: [],
     permissions,
   };
 }
+
+/**
+ * El store no responde preguntas de autorización: solo guarda la sesión. Quien
+ * decide es `createAuthorizationService`, y sus pruebas están en
+ * `shared/lib/authorization.spec.ts`.
+ */
 
 describe('useAuthStore', () => {
   it('empieza sin sesión', () => {
@@ -50,47 +57,5 @@ describe('useAuthStore', () => {
 
     expect(useAuthStore.getState().isAuthenticated()).toBe(false);
     expect(useAuthStore.getState().tokens).toBeNull();
-  });
-
-  describe('can', () => {
-    it('concede acceso cuando el usuario tiene el permiso', () => {
-      useAuthStore.getState().setSession(buildUser([PERMISSIONS.USERS_VIEW]), TOKENS);
-
-      expect(useAuthStore.getState().can(PERMISSIONS.USERS_VIEW)).toBe(true);
-    });
-
-    it('niega el acceso cuando falta el permiso', () => {
-      useAuthStore.getState().setSession(buildUser([PERMISSIONS.USERS_VIEW]), TOKENS);
-
-      expect(useAuthStore.getState().can(PERMISSIONS.USERS_DELETE)).toBe(false);
-    });
-
-    it('niega el acceso cuando no hay sesión', () => {
-      expect(useAuthStore.getState().can(PERMISSIONS.USERS_VIEW)).toBe(false);
-    });
-  });
-
-  describe('canAny', () => {
-    it('basta con uno de los permisos', () => {
-      useAuthStore.getState().setSession(buildUser([PERMISSIONS.DASHBOARD_VIEW]), TOKENS);
-
-      expect(
-        useAuthStore.getState().canAny([PERMISSIONS.USERS_VIEW, PERMISSIONS.DASHBOARD_VIEW]),
-      ).toBe(true);
-    });
-
-    it('falla si no tiene ninguno', () => {
-      useAuthStore.getState().setSession(buildUser([PERMISSIONS.MAPS_VIEW]), TOKENS);
-
-      expect(useAuthStore.getState().canAny([PERMISSIONS.USERS_VIEW, PERMISSIONS.USERS_EDIT])).toBe(
-        false,
-      );
-    });
-
-    it('con lista vacía no concede acceso', () => {
-      useAuthStore.getState().setSession(buildUser([PERMISSIONS.MAPS_VIEW]), TOKENS);
-
-      expect(useAuthStore.getState().canAny([])).toBe(false);
-    });
   });
 });

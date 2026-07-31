@@ -6,7 +6,7 @@ import { Button } from '@/shared/components/ui/button';
 import { useViewMode } from '@/shared/hooks/use-view-mode';
 import { TicketView } from '@/features/tickets/views';
 import { useTickets } from '@/features/tickets/use-tickets';
-import { useAuthStore } from '@/stores/auth.store';
+import { useAuthorization } from '@/shared/hooks/use-authorization';
 import { authenticatedRoute } from './authenticated.route';
 
 export const ticketsRoute = createRoute({
@@ -27,7 +27,7 @@ export const ticketsRoute = createRoute({
  * servicio: ni esta pantalla ni las vistas se modifican.
  */
 function TicketsPage(): React.JSX.Element {
-  const can = useAuthStore((state) => state.can);
+  const auth = useAuthorization();
 
   // Interruptor de desarrollo para poder ver el estado de error de la tabla.
   // Desaparece cuando exista el origen real.
@@ -38,7 +38,7 @@ function TicketsPage(): React.JSX.Element {
   const ticketsQuery = useTickets({ shouldFail });
   const { mode, reason } = useViewMode();
 
-  if (!can(PERMISSIONS.TICKETS_VIEW)) {
+  if (!auth.can(PERMISSIONS.TICKETS_VIEW)) {
     return <Alert variant="destructive">No tienes permiso para consultar tickets.</Alert>;
   }
 

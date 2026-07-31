@@ -1,5 +1,7 @@
+export * from './access-control.js';
 export * from './auth.js';
 export * from './common.js';
+export * from './modules.js';
 export * from './password.js';
 export * from './permissions.js';
 export * from './roles.js';

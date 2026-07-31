@@ -1,6 +1,6 @@
 import { UnauthorizedException } from '@nestjs/common';
 import { Test, type TestingModule } from '@nestjs/testing';
-import { PERMISSIONS, type AuthTokens } from '@redsis/contracts';
+import { ALL_APP_MODULES, PERMISSIONS, type AuthTokens } from '@redsis/contracts';
 import { ActivityLogService } from '../activity-log/activity-log.service';
 import { UserRepository } from '../users/user.repository';
 import type { UserWithAccess, UserWithCredentials } from '../users/user.types';
@@ -22,6 +22,7 @@ function buildUser(overrides: Partial<UserWithCredentials> = {}): UserWithCreden
     createdAt: new Date('2026-01-01T00:00:00.000Z'),
     passwordHash: PASSWORD_HASH,
     roles: ['administrador'],
+    modules: [...ALL_APP_MODULES],
     permissions: [PERMISSIONS.USERS_VIEW],
     ...overrides,
   };
@@ -112,6 +113,7 @@ describe('AuthService', () => {
         fullName: 'Administrador',
         isActive: true,
         roles: ['administrador'],
+        modules: [...ALL_APP_MODULES],
         permissions: [PERMISSIONS.USERS_VIEW],
       });
       expect(result.tokens).toEqual(buildTokens());

@@ -22,7 +22,7 @@ todavía.**
 | `any` en el código    | 0                                                  |
 | Componente más grande | Por debajo de 250 líneas                           |
 | Lint / tipos / build  | Limpios                                            |
-| Último commit         | Sprint 0.6.1 (estabilización)                      |
+| Último commit         | `9ab0817` (Sprint 0.6.1, estabilización)           |
 | Rama de trabajo       | `feature/stabilization`, sin integrar en `develop` |
 
 ---

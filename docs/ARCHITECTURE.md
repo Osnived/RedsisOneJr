@@ -336,9 +336,18 @@ siete operadores queda en un solo archivo y se prueba sin montar nada.
 Un módulo puede representarse de más de una forma. Qué forma corresponde lo
 decide `useViewMode()`, que devuelve `mode` y `reason`.
 
-La decisión no es solo del tamaño de pantalla: entran el rol y, en el futuro, la
-preferencia del usuario. `useIsMobile` es el único sitio de la aplicación que mira
-el tamaño de la ventana; ninguna página lo consulta.
+La decisión no es solo del tamaño de pantalla: entra también lo que el usuario
+puede hacer y, en el futuro, su preferencia. La regla es que **quien administra la
+plataforma trabaja en escritorio**: quien accede a Usuarios o a Seguridad ve la
+tabla, y quien no, en una pantalla pequeña ve tarjetas.
+
+Se pregunta al servicio de autorización, nunca por el nombre del rol: renombrar un
+rol no debe cambiar lo que se ve, y decidir por el cargo está prohibido (ver
+AGENTS.md). La regla vive en una función pura que recibe la respuesta ya resuelta,
+así que se lee y se prueba sin montar nada.
+
+`useIsMobile` es el único sitio de la aplicación que mira el tamaño de la ventana;
+ninguna página lo consulta.
 
 Cada módulo con varias vistas registra las suyas:
 

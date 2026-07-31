@@ -5,9 +5,12 @@ import { tablePreferencesKey, useTablePreferences } from './use-table-preference
 
 const DEFAULTS: TablePreferences = {
   columnVisibility: { notes: false },
+  columnOrder: [],
   columnSizing: { amount: 120 },
   pageSize: 25,
+  page: 1,
   sorting: [],
+  search: '',
 };
 
 function storedValue(tableId: string): unknown {

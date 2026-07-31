@@ -131,7 +131,7 @@ describe('DataTable', () => {
       const user = userEvent.setup();
       renderTable({ tableId: 'orden-bloqueado' });
 
-      await user.click(screen.getByRole('button', { name: 'Columnas' }));
+      await user.click(screen.getByRole('button', { name: /Columnas/ }));
       await user.click(screen.getByRole('checkbox', { name: 'Notas' }));
 
       expect(screen.queryByRole('button', { name: /Notas/ })).not.toBeInTheDocument();
@@ -188,7 +188,7 @@ describe('DataTable', () => {
       const user = userEvent.setup();
       renderTable({ tableId: 'columnas' });
 
-      await user.click(screen.getByRole('button', { name: 'Columnas' }));
+      await user.click(screen.getByRole('button', { name: /Columnas/ }));
       await user.click(screen.getByRole('checkbox', { name: 'Notas' }));
 
       expect(screen.getByRole('columnheader', { name: /Notas/ })).toBeInTheDocument();
@@ -198,27 +198,43 @@ describe('DataTable', () => {
       const user = userEvent.setup();
       renderTable({ tableId: 'columnas-fijas' });
 
-      await user.click(screen.getByRole('button', { name: 'Columnas' }));
+      await user.click(screen.getByRole('button', { name: /Columnas/ }));
 
       expect(screen.queryByRole('checkbox', { name: 'Nombre' })).not.toBeInTheDocument();
     });
   });
 
-  describe('restablecer preferencias', () => {
-    it('no ofrece restablecer si el usuario no ha cambiado nada', () => {
+  describe('restaurar configuración', () => {
+    it('la restauración vive dentro del selector de columnas', async () => {
+      const user = userEvent.setup();
       renderTable({ tableId: 'sin-ajustes' });
 
-      expect(screen.queryByRole('button', { name: /Restablecer/ })).not.toBeInTheDocument();
+      // Cerrado no hay control de restaurar suelto en la barra.
+      expect(screen.queryByRole('button', { name: /Restaurar/ })).not.toBeInTheDocument();
+
+      await user.click(screen.getByRole('button', { name: /Columnas/ }));
+
+      expect(screen.getByRole('button', { name: /Restaurar configuración/ })).toBeInTheDocument();
     });
 
-    it('aparece tras cambiar un ajuste y lo deshace', async () => {
+    it('está deshabilitada si el usuario no ha cambiado nada', async () => {
+      const user = userEvent.setup();
+      renderTable({ tableId: 'sin-ajustes-2' });
+
+      await user.click(screen.getByRole('button', { name: /Columnas/ }));
+
+      expect(screen.getByRole('button', { name: /Restaurar configuración/ })).toBeDisabled();
+    });
+
+    it('deshace un ajuste del usuario', async () => {
       const user = userEvent.setup();
       renderTable({ tableId: 'con-ajustes' });
 
       await user.selectOptions(screen.getByLabelText('Filas'), '50');
       expect(bodyRows()).toHaveLength(50);
 
-      await user.click(screen.getByRole('button', { name: /Restablecer/ }));
+      await user.click(screen.getByRole('button', { name: /Columnas/ }));
+      await user.click(screen.getByRole('button', { name: /Restaurar configuración/ }));
 
       expect(bodyRows()).toHaveLength(25);
     });
@@ -288,7 +304,7 @@ describe('DataTable', () => {
         rowActions: () => <button type="button">Ver</button>,
       });
 
-      await user.click(screen.getByRole('button', { name: 'Columnas' }));
+      await user.click(screen.getByRole('button', { name: /Columnas/ }));
 
       // El panel lista las tres columnas de datos ocultables (Monto, Activo,
       // Notas) y nunca la de acciones: ocultarla dejaría al usuario sin acceso

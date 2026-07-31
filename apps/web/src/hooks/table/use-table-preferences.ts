@@ -86,9 +86,12 @@ function readPreferences(tableId: string, defaults: TablePreferences): TablePref
     // aunque el usuario tenga preferencias guardadas de antes.
     return {
       columnVisibility: { ...defaults.columnVisibility, ...parsed.preferences.columnVisibility },
+      columnOrder: parsed.preferences.columnOrder,
       columnSizing: { ...defaults.columnSizing, ...parsed.preferences.columnSizing },
       pageSize: parsed.preferences.pageSize,
+      page: parsed.preferences.page,
       sorting: parsed.preferences.sorting,
+      search: parsed.preferences.search,
     };
   } catch {
     return defaults;
@@ -148,7 +151,10 @@ function isStoredPreferences(value: unknown): value is StoredTablePreferences {
   return (
     preferences !== null &&
     typeof preferences.pageSize === 'number' &&
+    typeof preferences.page === 'number' &&
+    typeof preferences.search === 'string' &&
     Array.isArray(preferences.sorting) &&
+    Array.isArray(preferences.columnOrder) &&
     typeof preferences.columnVisibility === 'object' &&
     preferences.columnVisibility !== null &&
     typeof preferences.columnSizing === 'object' &&

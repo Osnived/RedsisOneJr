@@ -1,10 +1,11 @@
+export { ColumnSelector, type SelectableColumn } from './column-selector';
 export { DataTable } from './data-table';
 export { TableBody } from './table-body';
-export { TableColumnToggle } from './table-column-toggle';
 export { TableEmptyState } from './table-empty-state';
 export { TableErrorState } from './table-error-state';
 export { TableHeader } from './table-header';
 export { TablePagination } from './table-pagination';
 export { TableSearch } from './table-search';
+export { TableSelectionBar } from './table-selection-bar';
 export { TableSkeleton } from './table-skeleton';
 export { TableToolbar } from './table-toolbar';

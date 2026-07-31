@@ -1,3 +1,4 @@
+/** @vitest-environment node */
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_COLUMN_WIDTH, MIN_COLUMN_WIDTH, type ColumnDefinition } from '@/types/table';
 import {

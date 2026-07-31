@@ -4,9 +4,11 @@ import {
   DEFAULT_COLUMN_WIDTH,
   MIN_COLUMN_WIDTH,
   ROW_ACTIONS_COLUMN_ID,
+  ROW_SELECTION_COLUMN_ID,
   type ColumnAlignment,
   type ColumnDefinition,
 } from '@/types/table';
+import { Checkbox } from '@/components/ui/checkbox';
 import { formatCellValue } from './format-cell-value';
 
 /**
@@ -34,6 +36,7 @@ const ROW_ACTIONS_COLUMN_WIDTH = 96;
 export function buildColumnDefs<TData>(
   columns: ColumnDefinition<TData>[],
   rowActions?: (row: TData) => ReactNode,
+  enableRowSelection = false,
 ): ColumnDef<TData, unknown>[] {
   const defs: ColumnDef<TData, unknown>[] = columns.map((column) => ({
     id: column.id,
@@ -58,7 +61,52 @@ export function buildColumnDefs<TData>(
     defs.push(buildRowActionsColumn(rowActions));
   }
 
+  // La casilla de selección va primero: es lo que el usuario busca cuando
+  // quiere marcar filas, y ponerla al final obligaría a recorrer la tabla.
+  if (enableRowSelection) {
+    defs.unshift(buildRowSelectionColumn<TData>());
+  }
+
   return defs;
+}
+
+/** Ancho de la columna de selección. Solo contiene una casilla. */
+const ROW_SELECTION_COLUMN_WIDTH = 44;
+
+/**
+ * Columna de casillas de selección.
+ *
+ * La casilla de la cabecera marca las filas de la página actual, no todas las
+ * existentes: en modo servidor el resto no está cargado, y en modo cliente
+ * seleccionar en silencio registros que no se ven sorprende al usuario.
+ */
+function buildRowSelectionColumn<TData>(): ColumnDef<TData, unknown> {
+  return {
+    id: ROW_SELECTION_COLUMN_ID,
+    enableSorting: false,
+    enableHiding: false,
+    enableResizing: false,
+    enableGlobalFilter: false,
+    size: ROW_SELECTION_COLUMN_WIDTH,
+    minSize: ROW_SELECTION_COLUMN_WIDTH,
+    meta: { align: 'center' },
+    header: ({ table }) => (
+      <Checkbox
+        checked={table.getIsAllPageRowsSelected()}
+        indeterminate={table.getIsSomePageRowsSelected()}
+        onChange={table.getToggleAllPageRowsSelectedHandler()}
+        aria-label="Seleccionar todas las filas de la página"
+      />
+    ),
+    cell: ({ row }) => (
+      <Checkbox
+        checked={row.getIsSelected()}
+        disabled={!row.getCanSelect()}
+        onChange={row.getToggleSelectedHandler()}
+        aria-label="Seleccionar fila"
+      />
+    ),
+  };
 }
 
 /**

@@ -1,10 +1,4 @@
-import type {
-  AuthenticatedUser,
-  LoginInput,
-  LoginResponse,
-  PaginatedResult,
-  UserSummary,
-} from '@redsis/contracts';
+import type { AuthenticatedUser, LoginInput, LoginResponse } from '@redsis/contracts';
 import { apiClient } from '@/lib/api-client';
 
 /**
@@ -21,9 +15,4 @@ export const authApi = {
     apiClient.post<void>('/auth/logout', { refreshToken }),
 
   me: (): Promise<AuthenticatedUser> => apiClient.get<AuthenticatedUser>('/auth/me'),
-};
-
-export const usersApi = {
-  list: (page: number, pageSize: number): Promise<PaginatedResult<UserSummary>> =>
-    apiClient.get<PaginatedResult<UserSummary>>(`/users?page=${page}&pageSize=${pageSize}`),
 };

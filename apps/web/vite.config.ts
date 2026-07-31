@@ -30,6 +30,16 @@ export default defineConfig({
     globals: true,
     setupFiles: ['./src/test/setup.ts'],
     css: false,
+    // Montar jsdom cuesta varios segundos por archivo y ese coste lo absorbe la
+    // primera prueba de cada uno. Con el límite por defecto de 5s, la primera
+    // prueba fallaba de forma intermitente sin que hubiera nada lento en ella.
+    testTimeout: 20_000,
+    hookTimeout: 20_000,
+    // Hilos en lugar de procesos: cada proceso arranca su propio Node y su propio
+    // jsdom, y con veinte archivos la máquina se queda sin recursos antes de que
+    // los workers respondan. Los hilos comparten proceso y arrancan mucho antes.
+    pool: 'threads',
+    maxWorkers: 4,
     coverage: {
       provider: 'v8',
       reportsDirectory: './coverage',

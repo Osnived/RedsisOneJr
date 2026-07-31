@@ -63,6 +63,18 @@ export interface DataTableProps<TData> {
    */
   rowActions?: (row: TData) => ReactNode;
 
+  /**
+   * Habilita la selección de filas con casillas de verificación.
+   *
+   * La selección es transitoria y no se guarda en preferencias: restaurar filas
+   * marcadas de una sesión anterior, cuando los datos ya cambiaron, sería
+   * engañoso.
+   */
+  enableRowSelection?: boolean;
+
+  /** Se invoca con las filas seleccionadas cada vez que la selección cambia. */
+  onRowSelectionChange?: (selectedRows: TData[]) => void;
+
   /** Por defecto `client`. */
   mode?: TableMode;
 

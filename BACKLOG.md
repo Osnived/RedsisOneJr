@@ -12,7 +12,7 @@ Antes de comenzar cualquier MVP debes leer:
 - [PROJECT_CONTEXT.md](PROJECT_CONTEXT.md)
 - [STACK.md](STACK.md) (su título interno es TECH_STACK)
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
-- CODING_STANDARDS.md — **pendiente de crear**
+- [CODING_STANDARDS.md](CODING_STANDARDS.md)
 
 Debes respetar completamente la arquitectura.
 
@@ -48,12 +48,12 @@ No continúes automáticamente con el siguiente MVP.
 | --- | ----------------------------- | --------- |
 | 1   | Infraestructura del DataTable | Terminado |
 | 2   | API pública del DataTable     | Terminado |
-| 3   | Componentes internos          | Pendiente |
-| 4   | Column Registry               | Pendiente |
-| 5   | ColumnSelector                | Pendiente |
-| 6   | Sistema de preferencias       | Pendiente |
-| 7   | Vista Tickets y navegación    | Pendiente |
-| 8   | Datos mock                    | Pendiente |
+| 3   | Componentes internos          | Terminado |
+| 4   | Column Registry               | Terminado |
+| 5   | ColumnSelector                | Terminado |
+| 6   | Sistema de preferencias       | Terminado |
+| 7   | Vista Tickets y navegación    | Terminado |
+| 8   | Datos mock                    | Terminado |
 | 9   | Conectar mock al DataTable    | Pendiente |
 | 10  | Refactor general              | Pendiente |
 

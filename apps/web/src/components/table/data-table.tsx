@@ -1,11 +1,12 @@
 import { useDataTable } from '@/hooks/table/use-data-table';
 import type { DataTableProps } from '@/types/table';
+import { ColumnSelector, type SelectableColumn } from './column-selector';
 import { TableBody } from './table-body';
-import { TableColumnToggle } from './table-column-toggle';
 import { TableEmptyState } from './table-empty-state';
 import { TableErrorState } from './table-error-state';
 import { TableHeader } from './table-header';
 import { TablePagination } from './table-pagination';
+import { TableSelectionBar } from './table-selection-bar';
 import { TableSkeleton } from './table-skeleton';
 import { TableToolbar } from './table-toolbar';
 
@@ -16,9 +17,10 @@ import { TableToolbar } from './table-toolbar';
  * pasan los datos y el framework resuelve orden, búsqueda, paginación,
  * visibilidad de columnas, redimensionado y persistencia de preferencias.
  *
- * Su única responsabilidad es orquestar: elige qué estado mostrar y conecta el
- * motor con los componentes de presentación. No contiene lógica de ningún
- * módulo, así que añadir uno nuevo no requiere tocar este archivo.
+ * Su única responsabilidad es orquestar: elige qué estado mostrar y traduce el
+ * motor a las propiedades planas que esperan los componentes de presentación.
+ * No contiene lógica de ningún módulo, así que añadir uno nuevo no requiere
+ * tocar este archivo.
  */
 export function DataTable<TData>({
   tableId,
@@ -29,6 +31,8 @@ export function DataTable<TData>({
   error = null,
   toolbar,
   rowActions,
+  enableRowSelection = false,
+  onRowSelectionChange,
   mode = 'client',
   totalRows,
   onQueryChange,
@@ -36,15 +40,25 @@ export function DataTable<TData>({
   enableSearch = true,
   searchPlaceholder = 'Buscar...',
 }: DataTableProps<TData>): React.JSX.Element {
-  const { table, search, setSearch, resetPreferences, hasCustomPreferences } = useDataTable({
+  const {
+    table,
+    search,
+    setSearch,
+    selectedRows,
+    clearSelection,
+    resetPreferences,
+    hasCustomPreferences,
+  } = useDataTable({
     tableId,
     columns,
     data,
     getRowId,
     mode,
+    enableRowSelection,
     // Las opcionales solo se pasan cuando existen: con
     // `exactOptionalPropertyTypes` no es lo mismo omitirlas que enviar `undefined`.
     ...(rowActions === undefined ? {} : { rowActions }),
+    ...(onRowSelectionChange === undefined ? {} : { onRowSelectionChange }),
     ...(totalRows === undefined ? {} : { totalRows }),
     ...(onQueryChange === undefined ? {} : { onQueryChange }),
   });
@@ -53,17 +67,41 @@ export function DataTable<TData>({
   const { pageIndex, pageSize } = table.getState().pagination;
   const rowsOnPage = table.getRowModel().rows.length;
 
+  /**
+   * El selector recibe una lista plana, no la instancia del motor. Esta
+   * traducción es la frontera: a partir de aquí ningún componente sabe que
+   * existe TanStack ni dónde se guardan las preferencias.
+   */
+  const selectableColumns: SelectableColumn[] = table
+    .getAllLeafColumns()
+    .filter((column) => column.getCanHide())
+    .map((column) => ({
+      id: column.id,
+      label: typeof column.columnDef.header === 'string' ? column.columnDef.header : column.id,
+      isVisible: column.getIsVisible(),
+    }));
+
   return (
     <div className="overflow-hidden rounded-lg border border-border bg-card">
       <TableToolbar
         {...(enableSearch
           ? { search: { value: search, onChange: setSearch, placeholder: searchPlaceholder } }
           : {})}
-        columnSelector={<TableColumnToggle table={table} />}
-        {...(hasCustomPreferences ? { onResetPreferences: resetPreferences } : {})}
+        columnSelector={
+          <ColumnSelector
+            columns={selectableColumns}
+            onToggle={(columnId, isVisible) =>
+              table.getColumn(columnId)?.toggleVisibility(isVisible)
+            }
+            onRestore={resetPreferences}
+            canRestore={hasCustomPreferences}
+          />
+        }
       >
         {toolbar}
       </TableToolbar>
+
+      <TableSelectionBar selectedCount={selectedRows.length} onClear={clearSelection} />
 
       <div className="overflow-x-auto">
         <table className="w-full border-collapse" style={{ minWidth: table.getTotalSize() }}>

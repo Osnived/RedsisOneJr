@@ -1,5 +1,5 @@
 import { Link, useRouterState } from '@tanstack/react-router';
-import { LayoutDashboard, LogOut, Users } from 'lucide-react';
+import { LayoutDashboard, LogOut, Ticket, Users } from 'lucide-react';
 import type { Permission } from '@redsis/contracts';
 import { PERMISSIONS } from '@redsis/contracts';
 import { Button } from '@/components/ui/button';
@@ -25,6 +25,12 @@ const NAVIGATION: NavigationItem[] = [
     label: 'Panel',
     icon: LayoutDashboard,
     permission: PERMISSIONS.DASHBOARD_VIEW,
+  },
+  {
+    to: '/tickets',
+    label: 'Tickets',
+    icon: Ticket,
+    permission: PERMISSIONS.TICKETS_VIEW,
   },
   {
     to: '/users',

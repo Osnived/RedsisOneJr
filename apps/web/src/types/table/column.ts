@@ -52,9 +52,10 @@ export const DEFAULT_COLUMN_WIDTH = 180;
 export const MIN_COLUMN_WIDTH = 80;
 
 /**
- * Identificador reservado para la columna de acciones de fila.
+ * Identificadores reservados para las columnas que añade el framework.
  *
- * Lleva prefijo doble para que no colisione con el id de una columna real
+ * Llevan prefijo doble para que no colisionen con el id de una columna real
  * definida por un módulo.
  */
 export const ROW_ACTIONS_COLUMN_ID = '__rowActions';
+export const ROW_SELECTION_COLUMN_ID = '__rowSelection';

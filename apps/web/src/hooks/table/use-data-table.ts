@@ -1,16 +1,15 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
   getCoreRowModel,
   getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
-  type ColumnSizingState,
+  type ColumnOrderState,
   type PaginationState,
+  type RowSelectionState,
   type SortingState,
   type Table,
-  type Updater,
-  type VisibilityState,
 } from '@tanstack/react-table';
 import type { ReactNode } from 'react';
 import {
@@ -26,6 +25,8 @@ import {
   buildInitialColumnVisibility,
 } from '@/lib/table/column-adapter';
 import { useTablePreferences } from './use-table-preferences';
+import { useQueryChangeNotifier } from './use-query-change-notifier';
+import { differsFromDefaults, resolveUpdater, selectRows } from './table-state';
 
 interface UseDataTableOptions<TData> {
   tableId: string;
@@ -33,6 +34,8 @@ interface UseDataTableOptions<TData> {
   data: TData[];
   getRowId: (row: TData) => string;
   rowActions?: (row: TData) => ReactNode;
+  enableRowSelection?: boolean;
+  onRowSelectionChange?: (selectedRows: TData[]) => void;
   mode?: TableMode;
   totalRows?: number;
   onQueryChange?: (query: TableQuery) => void;
@@ -42,8 +45,11 @@ interface UseDataTableResult<TData> {
   table: Table<TData>;
   search: string;
   setSearch: (value: string) => void;
+  /** Filas marcadas por el usuario, en el orden en que llegaron los datos. */
+  selectedRows: TData[];
+  clearSelection: () => void;
   resetPreferences: () => void;
-  /** True cuando el usuario ha modificado orden, columnas o tamaño de página. */
+  /** True cuando el usuario ha modificado algo respecto al estado inicial. */
   hasCustomPreferences: boolean;
 }
 
@@ -51,9 +57,11 @@ interface UseDataTableResult<TData> {
  * Motor del framework de tablas.
  *
  * Concentra toda la relación con TanStack Table: los componentes solo consumen
- * la instancia resultante. Los ajustes que el usuario espera conservar viven en
- * las preferencias y se persisten solos; la búsqueda y la página actual son
- * transitorias a propósito.
+ * la instancia resultante.
+ *
+ * Todo el estado que el usuario puede modificar vive en las preferencias y se
+ * persiste solo, a través de `useTablePreferences`. Este hook nunca toca
+ * `localStorage` ni sabe dónde se guarda nada.
  */
 export function useDataTable<TData>({
   tableId,
@@ -61,36 +69,44 @@ export function useDataTable<TData>({
   data,
   getRowId,
   rowActions,
+  enableRowSelection = false,
+  onRowSelectionChange,
   mode = 'client',
   totalRows,
   onQueryChange,
 }: UseDataTableOptions<TData>): UseDataTableResult<TData> {
-  const columnDefs = useMemo(() => buildColumnDefs(columns, rowActions), [columns, rowActions]);
+  const columnDefs = useMemo(
+    () => buildColumnDefs(columns, rowActions, enableRowSelection),
+    [columns, rowActions, enableRowSelection],
+  );
+
+  // La selección es transitoria: vive en memoria y no se persiste.
+  const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
 
   const defaults = useMemo<TablePreferences>(
     () => ({
       columnVisibility: buildInitialColumnVisibility(columns),
+      columnOrder: [],
       columnSizing: buildInitialColumnSizing(columns),
       pageSize: DEFAULT_PAGE_SIZE,
+      page: 1,
       sorting: [],
+      search: '',
     }),
     [columns],
   );
 
   const { preferences, update, reset } = useTablePreferences(tableId, defaults);
-  const [search, setSearch] = useState('');
-  const [pageIndex, setPageIndex] = useState(0);
-
   const isServerMode = mode === 'server';
 
   const sorting: SortingState = preferences.sorting;
-  const pagination: PaginationState = { pageIndex, pageSize: preferences.pageSize };
+  const columnOrder: ColumnOrderState = preferences.columnOrder;
+  const pagination: PaginationState = {
+    pageIndex: preferences.page - 1,
+    pageSize: preferences.pageSize,
+  };
 
-  // React Compiler no puede memoizar la instancia porque TanStack devuelve
-  // funciones nuevas en cada render. Es una limitación conocida de la librería
-  // que exige STACK.md, no un descuido: la instancia se consume aquí mismo y
-  // nunca se pasa a componentes memoizados.
-  // eslint-disable-next-line react-hooks/incompatible-library
+  // eslint-disable-next-line react-hooks/incompatible-library -- TanStack devuelve funciones nuevas en cada render; es una limitación conocida de la librería que exige STACK.md.
   const table = useReactTable<TData>({
     data,
     columns: columnDefs,
@@ -98,34 +114,44 @@ export function useDataTable<TData>({
     state: {
       sorting,
       pagination,
-      globalFilter: search,
+      columnOrder,
+      rowSelection,
+      globalFilter: preferences.search,
       columnVisibility: preferences.columnVisibility,
       columnSizing: preferences.columnSizing,
     },
     onSortingChange: (updater) => {
-      update({ sorting: resolveUpdater(updater, sorting) });
       // Un orden nuevo invalida la página actual: la fila buscada ya no está ahí.
-      setPageIndex(0);
+      update({ sorting: resolveUpdater(updater, sorting), page: 1 });
     },
     onPaginationChange: (updater) => {
       const next = resolveUpdater(updater, pagination);
-      setPageIndex(next.pageIndex);
-
-      if (next.pageSize !== preferences.pageSize) {
-        update({ pageSize: next.pageSize });
-      }
+      update({ page: next.pageIndex + 1, pageSize: next.pageSize });
     },
     onGlobalFilterChange: (updater) => {
-      setSearch(resolveUpdater(updater, search));
-      setPageIndex(0);
+      update({ search: resolveUpdater(updater, preferences.search), page: 1 });
     },
     onColumnVisibilityChange: (updater) => {
       update({ columnVisibility: resolveUpdater(updater, preferences.columnVisibility) });
     },
+    onColumnOrderChange: (updater) => {
+      update({ columnOrder: resolveUpdater(updater, columnOrder) });
+    },
     onColumnSizingChange: (updater) => {
       update({ columnSizing: resolveUpdater(updater, preferences.columnSizing) });
     },
+    onRowSelectionChange: (updater) => {
+      const next = resolveUpdater(updater, rowSelection);
+      setRowSelection(next);
+      // Se avisa aquí y no desde un efecto para no provocar renders en cascada:
+      // el estado nuevo ya se conoce en este punto.
+      onRowSelectionChange?.(selectRows(data, getRowId, next));
+    },
+    enableRowSelection,
     columnResizeMode: 'onChange',
+    // La página la gobiernan las preferencias: si TanStack la reiniciara al
+    // cambiar los datos, borraría la página restaurada en la primera carga.
+    autoResetPageIndex: false,
     getCoreRowModel: getCoreRowModel(),
     // En modo servidor el backend ya entrega los datos ordenados, filtrados y
     // paginados: aplicar los modelos del cliente los alteraría por segunda vez.
@@ -141,77 +167,26 @@ export function useDataTable<TData>({
   useQueryChangeNotifier({
     enabled: isServerMode,
     onQueryChange,
-    query: { page: pageIndex + 1, pageSize: preferences.pageSize, sorting, search },
+    query: {
+      page: preferences.page,
+      pageSize: preferences.pageSize,
+      sorting,
+      search: preferences.search,
+    },
   });
-
-  const hasCustomPreferences =
-    preferences.sorting.length > 0 ||
-    preferences.pageSize !== defaults.pageSize ||
-    !areRecordsEqual(preferences.columnVisibility, defaults.columnVisibility) ||
-    !areRecordsEqual(preferences.columnSizing, defaults.columnSizing);
 
   return {
     table,
-    search,
+    search: preferences.search,
     setSearch: (value: string) => {
-      setSearch(value);
-      setPageIndex(0);
+      update({ search: value, page: 1 });
     },
-    resetPreferences: () => {
-      reset();
-      setPageIndex(0);
+    selectedRows: selectRows(data, getRowId, rowSelection),
+    clearSelection: () => {
+      setRowSelection({});
+      onRowSelectionChange?.([]);
     },
-    hasCustomPreferences,
+    resetPreferences: reset,
+    hasCustomPreferences: differsFromDefaults(preferences, defaults),
   };
 }
-
-/**
- * Avisa al consumidor cuando cambia la consulta, solo en modo servidor.
- *
- * Se compara la consulta serializada para no disparar una petición por cada
- * render: sin esto, la identidad del objeto bastaría para pedir los mismos datos
- * en bucle.
- */
-function useQueryChangeNotifier({
-  enabled,
-  query,
-  onQueryChange,
-}: {
-  enabled: boolean;
-  query: TableQuery;
-  onQueryChange?: (query: TableQuery) => void;
-}): void {
-  const serialized = JSON.stringify(query);
-  const lastSerialized = useRef<string | null>(null);
-
-  useEffect(() => {
-    if (!enabled || !onQueryChange || lastSerialized.current === serialized) {
-      return;
-    }
-
-    lastSerialized.current = serialized;
-    onQueryChange(JSON.parse(serialized) as TableQuery);
-  }, [enabled, onQueryChange, serialized]);
-}
-
-/** TanStack entrega el valor nuevo o una función que lo calcula. */
-function resolveUpdater<TValue>(updater: Updater<TValue>, current: TValue): TValue {
-  return typeof updater === 'function'
-    ? (updater as (previous: TValue) => TValue)(current)
-    : updater;
-}
-
-function areRecordsEqual(
-  left: Record<string, boolean | number>,
-  right: Record<string, boolean | number>,
-): boolean {
-  const leftKeys = Object.keys(left);
-
-  if (leftKeys.length !== Object.keys(right).length) {
-    return false;
-  }
-
-  return leftKeys.every((key) => left[key] === right[key]);
-}
-
-export type { ColumnSizingState, SortingState, VisibilityState };

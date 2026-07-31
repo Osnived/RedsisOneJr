@@ -153,6 +153,108 @@ describe('useDataTable', () => {
       expect(second.result.current.table.getState().pagination.pageSize).toBe(50);
     });
 
+    it('conserva la búsqueda tras recargar', () => {
+      const first = renderTable({ tableId: 'persiste-busqueda' });
+
+      act(() => {
+        first.result.current.setSearch('Registro 007');
+      });
+      first.unmount();
+
+      const second = renderTable({ tableId: 'persiste-busqueda' });
+
+      expect(second.result.current.search).toBe('Registro 007');
+      expect(second.result.current.table.getRowModel().rows).toHaveLength(1);
+    });
+
+    it('conserva la página actual tras recargar', () => {
+      const first = renderTable({ tableId: 'persiste-pagina' });
+
+      act(() => {
+        first.result.current.table.setPageIndex(2);
+      });
+      first.unmount();
+
+      const second = renderTable({ tableId: 'persiste-pagina' });
+
+      expect(second.result.current.table.getState().pagination.pageIndex).toBe(2);
+      expect(second.result.current.table.getRowModel().rows[0]?.id).toBe('row-51');
+    });
+
+    it('conserva el ordenamiento tras recargar', () => {
+      const first = renderTable({ tableId: 'persiste-orden' });
+
+      act(() => {
+        first.result.current.table.getColumn('amount')?.toggleSorting(true);
+      });
+      first.unmount();
+
+      const second = renderTable({ tableId: 'persiste-orden' });
+
+      expect(second.result.current.table.getState().sorting).toEqual([
+        { id: 'amount', desc: true },
+      ]);
+    });
+
+    it('conserva las columnas visibles tras recargar', () => {
+      const first = renderTable({ tableId: 'persiste-columnas' });
+
+      act(() => {
+        first.result.current.table.getColumn('notes')?.toggleVisibility(true);
+      });
+      first.unmount();
+
+      const second = renderTable({ tableId: 'persiste-columnas' });
+
+      expect(second.result.current.table.getColumn('notes')?.getIsVisible()).toBe(true);
+    });
+
+    it('conserva el orden de columnas tras recargar', () => {
+      const first = renderTable({ tableId: 'persiste-orden-columnas' });
+
+      act(() => {
+        first.result.current.table.setColumnOrder(['amount', 'name', 'active', 'notes']);
+      });
+      first.unmount();
+
+      const second = renderTable({ tableId: 'persiste-orden-columnas' });
+
+      expect(second.result.current.table.getState().columnOrder).toEqual([
+        'amount',
+        'name',
+        'active',
+        'notes',
+      ]);
+    });
+
+    it('aplica el orden de columnas restaurado a las columnas visibles', () => {
+      const first = renderTable({ tableId: 'aplica-orden' });
+
+      act(() => {
+        first.result.current.table.setColumnOrder(['amount', 'active', 'name']);
+      });
+      first.unmount();
+
+      const second = renderTable({ tableId: 'aplica-orden' });
+
+      expect(
+        second.result.current.table.getVisibleLeafColumns().map((column) => column.id),
+      ).toEqual(['amount', 'active', 'name']);
+    });
+
+    it('conserva el ancho de columna tras recargar', () => {
+      const first = renderTable({ tableId: 'persiste-ancho' });
+
+      act(() => {
+        first.result.current.table.setColumnSizing({ name: 300 });
+      });
+      first.unmount();
+
+      const second = renderTable({ tableId: 'persiste-ancho' });
+
+      expect(second.result.current.table.getColumn('name')?.getSize()).toBe(300);
+    });
+
     it('restablece los ajustes y vuelve a la primera página', () => {
       const { result } = renderTable({ tableId: 'restablecer' });
 

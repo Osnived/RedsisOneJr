@@ -14,6 +14,8 @@ Leer en este orden antes de escribir código:
 
 @STACK.md
 
+@CODING_STANDARDS.md
+
 ---
 
 En caso de conflicto entre documentos, la prioridad es:

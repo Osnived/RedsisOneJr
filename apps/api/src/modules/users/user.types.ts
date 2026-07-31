@@ -29,6 +29,7 @@ export interface UserWithCredentials extends UserWithAccess {
  */
 export interface UserWithAccess extends UserAccount {
   roles: string[];
+  roleIds: string[];
   modules: AppModule[];
   permissions: Permission[];
 }

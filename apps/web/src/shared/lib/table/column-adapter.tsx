@@ -9,6 +9,7 @@ import {
   type ColumnDefinition,
 } from '@/shared/types/table';
 import { Checkbox } from '@/shared/components/ui/checkbox';
+import { DateTime } from '@/shared/components/ui/date-time';
 import { formatCellValue } from './format-cell-value';
 
 /**
@@ -56,7 +57,7 @@ export function buildColumnDefs<TData>(
     size: column.width ?? DEFAULT_COLUMN_WIDTH,
     minSize: column.minWidth ?? MIN_COLUMN_WIDTH,
     cell: (context) =>
-      column.cell ? column.cell(context.row.original) : formatCellValue(context.getValue()),
+      column.cell ? column.cell(context.row.original) : renderDefaultCell(context.getValue()),
     meta: {
       align: column.align ?? 'left',
       ...(column.groupLabel === undefined ? {} : { groupLabel: column.groupLabel }),
@@ -74,6 +75,24 @@ export function buildColumnDefs<TData>(
   }
 
   return defs;
+}
+
+/**
+ * Celda de una columna que no declara render propio.
+ *
+ * Una fecha se dibuja con el componente compartido y no como texto: es el único
+ * sitio que renderiza fechas en la plataforma, y así una celda queda con el
+ * instante exacto en el marcado aunque muestre solo el día (ver
+ * CODING_STANDARDS.md).
+ *
+ * El resto de valores se convierten a texto con el formato común del framework.
+ */
+function renderDefaultCell(value: unknown): ReactNode {
+  if (value instanceof Date) {
+    return <DateTime value={value} format="date" />;
+  }
+
+  return formatCellValue(value);
 }
 
 /** Ancho de la columna de selección. Solo contiene una casilla. */

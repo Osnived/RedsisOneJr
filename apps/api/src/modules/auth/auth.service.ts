@@ -1,7 +1,7 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import {
   ACTIVITY_ACTIONS,
-  MODULES,
+  APP_MODULES,
   type AuthenticatedUser,
   type JwtPayload,
   type LoginResponse,
@@ -55,7 +55,7 @@ export class AuthService {
     await this.activityLog.record({
       userId: user.id,
       action: ACTIVITY_ACTIONS.LOGIN,
-      module: MODULES.USERS,
+      module: APP_MODULES.USERS,
       entityId: user.id,
       ipAddress: context.ipAddress,
     });
@@ -100,7 +100,7 @@ export class AuthService {
     await this.activityLog.record({
       userId,
       action: ACTIVITY_ACTIONS.LOGOUT,
-      module: MODULES.USERS,
+      module: APP_MODULES.USERS,
       entityId: userId,
       ipAddress,
     });

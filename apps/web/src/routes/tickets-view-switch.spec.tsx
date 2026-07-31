@@ -3,8 +3,9 @@ import { render, screen, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import {
   ALL_APP_MODULES,
+  APP_MODULES,
   PERMISSIONS,
-  SYSTEM_ROLES,
+  type AppModule,
   type AuthTokens,
   type AuthenticatedUser,
 } from '@redsis/contracts';
@@ -20,19 +21,27 @@ const TOKENS: AuthTokens = { accessToken: 'a', refreshToken: 'r', expiresIn: 900
  */
 const TicketsPage = ticketsRoute.options.component as React.ComponentType;
 
-function authenticateWithRole(role: string): void {
+/**
+ * La sesión se describe por sus accesos y no por su rol: desde el Sprint 0.6.1 es
+ * lo único que mira la decisión de vista.
+ */
+function authenticateWithModules(modules: AppModule[]): void {
   const user: AuthenticatedUser = {
     id: 'user-1',
     email: 'persona@redsis.com',
     fullName: 'Persona',
     isActive: true,
-    roles: [role],
-    modules: ALL_APP_MODULES.slice(),
+    roles: ['un-nombre-cualquiera'],
+    modules,
     permissions: [PERMISSIONS.TICKETS_VIEW],
   };
 
   useAuthStore.getState().setSession(user, TOKENS);
 }
+
+/** Accesos equivalentes a los que reparte la semilla. */
+const FIELD_ACCESS: AppModule[] = [APP_MODULES.DASHBOARD, APP_MODULES.TICKETS, APP_MODULES.MAPS];
+const SUPERVISOR_ACCESS: AppModule[] = [...FIELD_ACCESS, APP_MODULES.USERS];
 
 /** `matchMedia` no existe en jsdom: hay que declararlo para simular el móvil. */
 function simulateViewport({ isMobile }: { isMobile: boolean }): void {
@@ -68,9 +77,9 @@ afterEach(() => {
 });
 
 describe('cambio automático de vista en Tickets', () => {
-  it('un técnico en móvil ve las tarjetas', async () => {
+  it('en móvil, quien no administra ve las tarjetas', async () => {
     simulateViewport({ isMobile: true });
-    authenticateWithRole(SYSTEM_ROLES.TECHNICIAN);
+    authenticateWithModules(FIELD_ACCESS);
 
     renderTicketsPage();
     await waitForTickets();
@@ -79,9 +88,9 @@ describe('cambio automático de vista en Tickets', () => {
     expect(screen.queryByRole('table')).not.toBeInTheDocument();
   });
 
-  it('un técnico en escritorio ve la tabla avanzada', async () => {
+  it('en escritorio se ve la tabla avanzada', async () => {
     simulateViewport({ isMobile: false });
-    authenticateWithRole(SYSTEM_ROLES.TECHNICIAN);
+    authenticateWithModules(FIELD_ACCESS);
 
     renderTicketsPage();
     await waitForTickets();
@@ -90,9 +99,9 @@ describe('cambio automático de vista en Tickets', () => {
     expect(screen.queryByRole('article')).not.toBeInTheDocument();
   });
 
-  it('un supervisor en móvil ve la tabla avanzada', async () => {
+  it('quien accede a Usuarios ve la tabla también en móvil', async () => {
     simulateViewport({ isMobile: true });
-    authenticateWithRole(SYSTEM_ROLES.SUPERVISOR);
+    authenticateWithModules(SUPERVISOR_ACCESS);
 
     renderTicketsPage();
     await waitForTickets();
@@ -102,18 +111,18 @@ describe('cambio automático de vista en Tickets', () => {
 
   it('explica por qué muestra tarjetas', async () => {
     simulateViewport({ isMobile: true });
-    authenticateWithRole(SYSTEM_ROLES.TECHNICIAN);
+    authenticateWithModules(FIELD_ACCESS);
 
     renderTicketsPage();
     await waitForTickets();
 
     // Una vista que cambia sola sin explicación parece un fallo.
-    expect(screen.getByText(/tecnico-en-movil/)).toBeInTheDocument();
+    expect(screen.getByText(/movil-sin-administracion/)).toBeInTheDocument();
   });
 
   it('no explica nada cuando muestra la tabla', async () => {
     simulateViewport({ isMobile: false });
-    authenticateWithRole(SYSTEM_ROLES.TECHNICIAN);
+    authenticateWithModules(FIELD_ACCESS);
 
     renderTicketsPage();
     await waitForTickets();
@@ -123,7 +132,7 @@ describe('cambio automático de vista en Tickets', () => {
 
   it('la tabla avanzada llega con sus capacidades encendidas', async () => {
     simulateViewport({ isMobile: false });
-    authenticateWithRole(SYSTEM_ROLES.ADMINISTRATOR);
+    authenticateWithModules([...ALL_APP_MODULES]);
 
     renderTicketsPage();
     await waitForTickets();
@@ -141,8 +150,8 @@ describe('cambio automático de vista en Tickets', () => {
         email: 'otra@redsis.com',
         fullName: 'Otra',
         isActive: true,
-        roles: [SYSTEM_ROLES.TECHNICIAN],
-        modules: ALL_APP_MODULES.slice(),
+        roles: ['un-nombre-cualquiera'],
+        modules: [...FIELD_ACCESS],
         permissions: [],
       },
       TOKENS,

@@ -14,6 +14,47 @@ Cada versión enlaza su documento de alcance y, cuando existe, su resumen en
 
 ---
 
+## [0.6.1] — 31/07/2026 — Estabilización
+
+Alcance: `SPRINT_0.6.1_STABILIZATION.md`. Sin funcionalidad nueva: cierra las deudas
+pequeñas antes de empezar el módulo principal de Tickets.
+
+### Cambiado
+
+- **Toda fecha visible pasa por el componente `DateTime`.** El adaptador de
+  columnas renderiza las fechas con él en lugar de convertirlas a texto, y las
+  tarjetas de Tickets dejaron de tener su propio formateador. `formatCellValue` y
+  el texto contra el que comparan los filtros delegan en `formatDateTime`, así que
+  el formato de fecha existe en un solo archivo.
+- **`useViewMode()` ya no mira el nombre del rol.** Decide con el servicio de
+  autorización: quien accede a Usuarios o a Seguridad administra la plataforma y
+  ve la tabla; quien no, en pantalla pequeña ve tarjetas. El motivo pasó de
+  `tecnico-en-movil` a `movil-sin-administracion`. Para los tres roles de la
+  semilla el resultado es idéntico al anterior.
+- **El formulario de usuario preselecciona el rol por identificador.** `UserSummary`
+  incorpora `roleIds`; antes se buscaba por nombre y renombrar un rol dejaba el
+  selector en blanco.
+- **Una sola pantalla de acceso denegado.** Las páginas que negaban con una alerta
+  roja ahora usan el mismo 403 que la protección de rutas: la misma situación se ve
+  igual, la deniegue la ruta o la pantalla.
+
+### Retirado
+
+- `MODULES` y `ModuleName` de los contratos: `APP_MODULES` ya cubría lo mismo y
+  tener dos catálogos de módulos invitaba a divergir. Los valores almacenados no
+  cambian.
+- `groupPermissionsByModule`, `IMPLEMENTED_APP_MODULES` e `isEmptyDiff`: sin
+  consumidores fuera de sus propias pruebas.
+- Los identificadores de tabla de las pantallas retiradas (`roles`, `permissions`)
+  y uno que nunca se usó (`activity-logs`).
+
+### Notas
+
+- Docker queda marcado oficialmente como **Deferred**: se validará en el primer
+  despliegue. Ver [TECH_DEBT.md](TECH_DEBT.md).
+
+---
+
 ## [0.6.0] — 31/07/2026 — Administración de accesos
 
 Alcance: `RELEASE_0.6_ACCESS_CONTROL.md`. Commit: `58ee086`.

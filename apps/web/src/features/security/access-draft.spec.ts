@@ -10,7 +10,6 @@ import {
   diffAccess,
   draftFromRole,
   hasChanges,
-  isEmptyDiff,
   toggleModule,
   togglePermission,
   type AccessDraft,
@@ -144,9 +143,12 @@ describe('hasChanges', () => {
 
 describe('diffAccess', () => {
   it('no encuentra diferencias sin cambios', () => {
-    const diff = diffAccess(draftFromRole(ROLE), ROLE);
-
-    expect(isEmptyDiff(diff)).toBe(true);
+    expect(diffAccess(draftFromRole(ROLE), ROLE)).toEqual({
+      addedModules: [],
+      removedModules: [],
+      addedPermissions: [],
+      removedPermissions: [],
+    });
   });
 
   it('enumera lo añadido y lo quitado', () => {

@@ -1,6 +1,6 @@
 # TECH_DEBT.md
 
-Última actualización: 31/07/2026
+Última actualización: 31/07/2026 (Sprint 0.6.1)
 
 Registro de deuda técnica. **Nada de aquí está implementado**: este documento
 existe para que lo pendiente esté escrito y no dependa de la memoria de nadie.
@@ -20,9 +20,23 @@ Este archivo responde "qué sabemos que falta o está a medias, y qué cuesta".
 
 ---
 
+# 0. Cerrado en el Sprint 0.6.1
+
+Se deja constancia para que nadie vuelva a registrarlo como pendiente:
+
+- **Formateo manual de fechas dentro de features.** Toda fecha visible pasa por el
+  componente `DateTime`, y el formato existe en un solo archivo.
+- **`useViewMode` comparaba el nombre del rol.** Ahora decide con el servicio de
+  autorización. Era la contradicción entre el MVP 8 del 0.6 y el MVP 11 del 0.5.
+- **El formulario de usuario buscaba el rol por nombre.** Ahora por identificador.
+- **Dos catálogos de módulos** (`MODULES` y `APP_MODULES`). Queda uno.
+- **Dos presentaciones del acceso denegado.** Queda una.
+
+---
+
 # 1. Riesgos abiertos
 
-## Docker nunca se ha construido
+## Docker nunca se ha construido — **Deferred**
 
 **Impacto: alto. Coste: medio, con incógnita.**
 
@@ -30,7 +44,11 @@ El proxy TLS de la red rompe `pnpm install` dentro del contenedor. Ver
 [certs/README.md](certs/README.md). Es lo único de la arquitectura que no ha
 corrido de verdad, y STACK.md exige que toda la plataforma se ejecute con Docker.
 
-Mientras no se resuelva, el despliegue en EasyPanel es una incógnita, no un plan.
+**Decisión del Sprint 0.6.1: aplazado.** Se validará únicamente durante el primer
+despliegue del sistema. No se dedica tiempo a resolverlo en el entorno corporativo,
+porque el problema es del proxy de la red y no del proyecto.
+
+Mientras no se resuelva, el despliegue en EasyPanel sigue siendo una incógnita.
 
 ## CI nunca se ha verificado en verde
 
@@ -59,21 +77,6 @@ que ser manual.
 ---
 
 # 2. Funcionalidad a medias
-
-## MVP 11: retirar el formateo manual de fechas
-
-**Impacto: medio. Coste: bajo.**
-
-La regla global de DateTime quedó a mitad. Existe lo compartido —el componente
-`DateTime` y `formatDateTime`— y el historial de Seguridad ya lo usa. Falta que
-las features dejen de formatear por su cuenta:
-
-- `features/tickets/views/ticket-card-view.tsx` tiene su propio `formatDate`.
-- `shared/lib/table/format-cell-value.ts` formatea fechas dentro de las celdas.
-  Es infraestructura compartida, no una feature, pero duplica la decisión de
-  formato y debería delegar en el formateador único.
-
-Mientras siga así, cambiar el formato o la zona horaria exige tocar tres sitios.
 
 ## Vistas guardadas: crear, aplicar y borrar, no actualizar
 
@@ -201,22 +204,6 @@ interacción entre los reintentos de TanStack Query y `isPending`.
 # 6. Contradicciones sin resolver
 
 Estas necesitan una decisión, no código.
-
-## `useViewMode` compara el nombre del rol
-
-**Impacto: medio.**
-
-El MVP 8 del Release 0.6 prohíbe `user.roles.includes(...)`. El MVP 11 del Release
-0.5, ya entregado y aprobado, **exige** decidir la vista por rol: "Técnico + Mobile
-→ Cards".
-
-Se mantuvo la decisión del 0.5 porque es presentación y no autorización: nadie gana
-acceso por ser técnico, solo ve tarjetas en lugar de tabla. Pero la forma del código
-es exactamente la prohibida.
-
-Salidas posibles: aceptarlo y documentar la excepción, o decidir la vista por algo
-del propio usuario —una preferencia, un módulo— en lugar del rol, lo que cambiaría
-un MVP ya aprobado.
 
 ## Sucursales y Zonas con agrupar y filtrar
 

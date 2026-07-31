@@ -1,7 +1,7 @@
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import {
   ACTIVITY_ACTIONS,
-  MODULES,
+  APP_MODULES,
   buildPaginatedResult,
   type PaginatedResult,
   type PaginationInput,
@@ -68,7 +68,7 @@ export class UsersService {
     await this.activityLog.record({
       userId: actor.actorId,
       action: ACTIVITY_ACTIONS.CREATE,
-      module: MODULES.USERS,
+      module: APP_MODULES.USERS,
       entityId: created.id,
       metadata: { email: created.email },
       ipAddress: actor.ipAddress,
@@ -87,7 +87,7 @@ export class UsersService {
     await this.activityLog.record({
       userId: actor.actorId,
       action: ACTIVITY_ACTIONS.UPDATE,
-      module: MODULES.USERS,
+      module: APP_MODULES.USERS,
       entityId: id,
       metadata: { changes: Object.keys(input) },
       ipAddress: actor.ipAddress,
@@ -111,7 +111,7 @@ export class UsersService {
     await this.activityLog.record({
       userId: actor.actorId,
       action: ACTIVITY_ACTIONS.DELETE,
-      module: MODULES.USERS,
+      module: APP_MODULES.USERS,
       entityId: id,
       ipAddress: actor.ipAddress,
     });
@@ -127,6 +127,7 @@ function toUserSummary(user: UserWithAccess): UserSummary {
     fullName: user.fullName,
     isActive: user.isActive,
     roles: user.roles,
+    roleIds: user.roleIds,
     createdAt: user.createdAt.toISOString(),
     lastLoginAt: user.lastLoginAt ? user.lastLoginAt.toISOString() : null,
   };

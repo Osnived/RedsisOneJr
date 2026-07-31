@@ -10,6 +10,7 @@ function buildUser(overrides: Partial<UserSummary> = {}): UserSummary {
     fullName: 'Administrador',
     isActive: true,
     roles: ['administrador'],
+    roleIds: ['role-1'],
     createdAt: '2026-01-01T00:00:00.000Z',
     lastLoginAt: '2026-07-30T12:00:00.000Z',
     ...overrides,

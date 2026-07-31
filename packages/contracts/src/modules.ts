@@ -128,11 +128,6 @@ export const ALL_APP_MODULES: readonly AppModule[] = APP_MODULE_DEFINITIONS.map(
   (definition) => definition.key,
 );
 
-/** Módulos que ya tienen pantalla. Son los únicos que puede dibujar el menú. */
-export const IMPLEMENTED_APP_MODULES: readonly AppModule[] = APP_MODULE_DEFINITIONS.filter(
-  (definition) => definition.route !== null,
-).map((definition) => definition.key);
-
 export function findAppModule(key: string): AppModuleDefinition | undefined {
   return APP_MODULE_DEFINITIONS.find((definition) => definition.key === key);
 }

@@ -6,6 +6,7 @@ import { Button } from '@/shared/components/ui/button';
 import { useViewMode } from '@/shared/hooks/use-view-mode';
 import { TicketView } from '@/features/tickets/views';
 import { useTickets } from '@/features/tickets/use-tickets';
+import { Forbidden } from '@/shared/components/layout/forbidden';
 import { useAuthorization } from '@/shared/hooks/use-authorization';
 import { authenticatedRoute } from './authenticated.route';
 
@@ -39,7 +40,7 @@ function TicketsPage(): React.JSX.Element {
   const { mode, reason } = useViewMode();
 
   if (!auth.can(PERMISSIONS.TICKETS_VIEW)) {
-    return <Alert variant="destructive">No tienes permiso para consultar tickets.</Alert>;
+    return <Forbidden detail="No tienes permiso para consultar tickets." />;
   }
 
   const tickets = ticketsQuery.data ?? [];

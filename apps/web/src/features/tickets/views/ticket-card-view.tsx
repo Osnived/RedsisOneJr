@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { Building2, CalendarDays, MapPin, UserRound } from 'lucide-react';
 import {
   TICKET_PRIORITY_LABELS,
@@ -9,8 +10,8 @@ import {
 import { Alert } from '@/shared/components/ui/alert';
 import { Badge, type BadgeVariant } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
+import { DateTime } from '@/shared/components/ui/date-time';
 import { Spinner } from '@/shared/components/ui/spinner';
-import { EMPTY_CELL } from '@/shared/lib/table/format-cell-value';
 import type { TicketViewProps } from './ticket-view.types';
 
 /**
@@ -112,7 +113,9 @@ function TicketCard({
         <Field icon={Building2} label="Cliente" value={ticket.clientName} />
         <Field icon={MapPin} label="Sucursal" value={`${ticket.branchName}, ${ticket.city}`} />
         <Field icon={UserRound} label="Técnico" value={ticket.technicianName} />
-        <Field icon={CalendarDays} label="Creación" value={formatDate(ticket.createdAt)} />
+        <Field icon={CalendarDays} label="Creación">
+          <DateTime value={ticket.createdAt} format="date" />
+        </Field>
       </dl>
 
       {/* Ancho completo: en un móvil el pulgar no acierta un botón pequeño. */}
@@ -127,25 +130,24 @@ function Field({
   icon: Icon,
   label,
   value,
+  children,
 }: {
   icon: typeof Building2;
   label: string;
-  value: string | null;
+  /** Texto del campo. Se ignora si se pasan hijos. */
+  value?: string | null;
+  /** Contenido propio, para lo que no es texto plano —una fecha, por ejemplo. */
+  children?: ReactNode;
 }): React.JSX.Element {
+  const isMissing = children === undefined && (value === null || value === undefined);
+
   return (
     <div className="flex items-start gap-2">
       <Icon className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
       <dt className="sr-only">{label}</dt>
-      <dd className={value === null ? 'text-muted-foreground' : undefined}>
-        {value ?? `Sin ${label.toLocaleLowerCase('es')}`}
+      <dd className={isMissing ? 'text-muted-foreground' : undefined}>
+        {children ?? value ?? `Sin ${label.toLocaleLowerCase('es')}`}
       </dd>
     </div>
   );
-}
-
-/** Las fechas llegan en ISO y se muestran como las lee una persona. */
-function formatDate(isoDate: string): string {
-  const date = new Date(isoDate);
-
-  return Number.isNaN(date.getTime()) ? EMPTY_CELL : date.toLocaleDateString('es');
 }

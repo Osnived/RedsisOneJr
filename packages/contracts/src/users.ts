@@ -23,7 +23,18 @@ export interface UserSummary {
   email: string;
   fullName: string;
   isActive: boolean;
+
+  /** Nombres de los roles asignados. Para mostrar, nunca para decidir. */
   roles: string[];
+
+  /**
+   * Identificadores de los roles asignados, en el mismo orden que `roles`.
+   *
+   * Es lo que consume un formulario para preseleccionar el rol: hacerlo por
+   * nombre se rompía al renombrar un rol, y el nombre es visible y editable.
+   */
+  roleIds: string[];
+
   createdAt: string;
   lastLoginAt: string | null;
 }

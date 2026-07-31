@@ -18,12 +18,12 @@ todavía.**
 
 | Métrica               | Valor                                              |
 | --------------------- | -------------------------------------------------- |
-| Pruebas               | 646 (84 API + 524 web + 38 contratos)              |
+| Pruebas               | 643 (84 API + 525 web + 34 contratos)              |
 | `any` en el código    | 0                                                  |
 | Componente más grande | Por debajo de 250 líneas                           |
 | Lint / tipos / build  | Limpios                                            |
-| Último commit         | `58ee086` (Release 0.6, administración de accesos) |
-| Rama de trabajo       | `feature/access-control`, integrada en `develop`   |
+| Último commit         | Sprint 0.6.1 (estabilización)                      |
+| Rama de trabajo       | `feature/stabilization`, sin integrar en `develop` |
 
 ---
 
@@ -110,7 +110,9 @@ Activarlas avisa por consola en lugar de fallar en silencio.
 ## Vista adaptativa
 
 `useViewMode()` decide cómo se representa un módulo y devuelve `mode` y `reason`.
-Considera el rol, el tamaño de pantalla y —preparado— la preferencia del usuario.
+Considera el acceso del usuario, el tamaño de pantalla y —preparado— su
+preferencia: quien accede a Usuarios o a Seguridad administra la plataforma y ve la
+tabla; quien no, en pantalla pequeña ve tarjetas. **No mira el nombre del rol.**
 `useIsMobile` es el único sitio que mira el tamaño de la ventana.
 
 Tickets registra sus vistas en `features/tickets/views/`. Kanban, Calendario,
@@ -143,9 +145,8 @@ shared/
 
 ## Del Release 0.6
 
-Solo una parte del MVP 11 (regla global de DateTime): existe el componente
-compartido `DateTime` y su formateador, pero **queda retirar el formateo manual
-de fechas dentro de features**. Registrado en [TECH_DEBT.md](TECH_DEBT.md).
+Nada. El MVP 11 se cerró en el Sprint 0.6.1: toda fecha visible pasa por el
+componente compartido.
 
 ## Módulos declarados sin construir
 
@@ -168,9 +169,10 @@ acceso desde Seguridad, y el menú no los dibuja hasta que existan.
 El detalle completo, con causa y coste estimado, está en
 [TECH_DEBT.md](TECH_DEBT.md). Lo que no puede pasarse por alto al retomar:
 
-**Docker nunca se ha construido.** El proxy TLS de la red rompe `pnpm install`
-dentro del contenedor. Ver [certs/README.md](certs/README.md). Es lo único de la
-arquitectura que no ha corrido de verdad.
+**Docker nunca se ha construido. Aplazado (Deferred).** Por decisión del Sprint
+0.6.1 se validará en el primer despliegue: el proxy TLS de la red rompe
+`pnpm install` dentro del contenedor y el problema no es del proyecto. Ver
+[certs/README.md](certs/README.md).
 
 **CI nunca se ha verificado en verde.** El pipeline existe y hay repositorio con
 remoto. Nadie ha comprobado el resultado.
@@ -188,11 +190,6 @@ por pruebas, incluidas las reglas de acceso, pero no se ha comprobado en pantall
 técnico.
 
 ## Contradicciones pendientes de decisión
-
-**`useViewMode` compara el nombre del rol.** El MVP 8 del Release 0.6 prohíbe
-`user.roles.includes(...)`, y el MVP 11 del Release 0.5 —ya entregado— exige
-decidir la vista por rol. Se mantuvo la decisión del 0.5 porque es presentación y
-no autorización: nadie gana acceso por ser técnico. **Sin resolver.**
 
 **Sucursales y Zonas con agrupar y filtrar.** Se pidió que usaran el BaseTable con
 agrupar y filtrar, lo que contradice el "no debe soportar" del MVP 1 del Release
@@ -217,9 +214,8 @@ Recomendación por orden:
    aparezca como acceso total y no editable.
 2. **Comprobar el CI en GitHub Actions.** Es lo más barato y lo que más
    información da.
-3. **Cerrar el MVP 11**: retirar el formateo manual de fechas de las features.
-4. **Resolver las contradicciones** de la sección 4.
-5. **Empezar el Release 0.7**: integración con Baserow. Ver [NEXT.md](NEXT.md).
+3. **Resolver las contradicciones** que quedan en la sección 4.
+4. **Empezar el Release 0.7**: integración con Baserow. Ver [NEXT.md](NEXT.md).
 
 ---
 

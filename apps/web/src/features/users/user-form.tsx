@@ -193,15 +193,15 @@ function buildDefaultValues(user: UserSummary | undefined, roles: RoleSummary[])
   }
 
   const { firstName, lastName } = splitFullName(user.fullName);
-  // El listado entrega los roles por nombre; se traduce al identificador que
-  // espera el selector.
-  const currentRole = roles.find((role) => user.roles.includes(role.name));
+  // Se preselecciona por identificador y no por nombre: el nombre de un rol es
+  // visible y editable, así que renombrarlo dejaba el selector en blanco.
+  const currentRoleId = user.roleIds.find((roleId) => roles.some((role) => role.id === roleId));
 
   return {
     firstName,
     lastName,
     email: user.email,
-    roleId: currentRole?.id ?? '',
+    roleId: currentRoleId ?? '',
     isActive: user.isActive,
   };
 }

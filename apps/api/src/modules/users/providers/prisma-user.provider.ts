@@ -31,6 +31,7 @@ const USER_WITH_ACCESS_SELECT = {
     // que concede sin tener que quitárselo a cada usuario.
     where: { role: { isActive: true } },
     select: {
+      roleId: true,
       role: {
         select: {
           name: true,
@@ -52,6 +53,7 @@ type PrismaUserWithAccess = {
   createdAt: Date;
   passwordHash: string;
   roles: {
+    roleId: string;
     role: {
       name: string;
       hasFullAccess: boolean;
@@ -213,6 +215,7 @@ export class PrismaUserProvider extends UserRepository {
     return {
       ...this.toUserAccount(user),
       roles: user.roles.map((entry) => entry.role.name),
+      roleIds: user.roles.map((entry) => entry.roleId),
       modules: this.collectModules(user),
       permissions: this.collectPermissions(user),
     };

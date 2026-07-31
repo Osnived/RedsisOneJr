@@ -1,3 +1,5 @@
+import { formatDateTime } from '@/shared/lib/format-date-time';
+
 /** Marca visual para un valor ausente. Una celda vacía se confunde con un fallo. */
 export const EMPTY_CELL = '—';
 
@@ -6,6 +8,11 @@ export const EMPTY_CELL = '—';
  *
  * Vive en el framework y no en cada columna para que toda la plataforma muestre
  * las fechas, los booleanos y los valores vacíos de la misma forma.
+ *
+ * Las fechas **visibles** no pasan por aquí: el adaptador de columnas las
+ * renderiza con el componente `DateTime`. Esta rama existe para los contextos que
+ * necesitan texto, y delega en el mismo formateador para que no haya dos
+ * implementaciones del formato de fecha.
  */
 export function formatCellValue(value: unknown): string {
   if (value === null || value === undefined || value === '') {
@@ -13,7 +20,7 @@ export function formatCellValue(value: unknown): string {
   }
 
   if (value instanceof Date) {
-    return Number.isNaN(value.getTime()) ? EMPTY_CELL : value.toLocaleDateString('es');
+    return formatDateTime(value, 'date');
   }
 
   if (typeof value === 'boolean') {

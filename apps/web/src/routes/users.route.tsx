@@ -21,6 +21,7 @@ import {
   useUpdateUser,
 } from '@/features/users/use-user-mutations';
 import { useRoles } from '@/features/roles/use-roles';
+import { Forbidden } from '@/shared/components/layout/forbidden';
 import { useAuthorization } from '@/shared/hooks/use-authorization';
 import { useAuthStore } from '@/stores/auth.store';
 import { authenticatedRoute } from './authenticated.route';
@@ -58,7 +59,7 @@ function UsersPage(): React.JSX.Element {
   const setUserActive = useSetUserActive();
 
   if (!auth.can(PERMISSIONS.USERS_VIEW)) {
-    return <Alert variant="destructive">No tienes permiso para consultar usuarios.</Alert>;
+    return <Forbidden detail="No tienes permiso para consultar usuarios." />;
   }
 
   const closeForm = (): void => {

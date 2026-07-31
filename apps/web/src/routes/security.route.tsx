@@ -3,6 +3,7 @@ import { createRoute } from '@tanstack/react-router';
 import { PERMISSIONS, type RoleSummary } from '@redsis/contracts';
 import { Alert } from '@/shared/components/ui/alert';
 import { Spinner } from '@/shared/components/ui/spinner';
+import { Forbidden } from '@/shared/components/layout/forbidden';
 import { useAuthorization } from '@/shared/hooks/use-authorization';
 import { AccessHistory } from '@/features/security/access-history';
 import { RoleAccessPanel } from '@/features/security/role-access-panel';
@@ -61,7 +62,7 @@ function SecurityPage(): React.JSX.Element {
   const canEdit = auth.can(PERMISSIONS.ROLES_EDIT);
 
   if (!auth.can(PERMISSIONS.ROLES_VIEW)) {
-    return <Alert variant="destructive">No tienes permiso para administrar la seguridad.</Alert>;
+    return <Forbidden detail="No tienes permiso para administrar la seguridad." />;
   }
 
   return (

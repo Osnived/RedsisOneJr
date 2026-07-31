@@ -4,7 +4,6 @@ import {
   ALL_APP_MODULES,
   APP_MODULES,
   APP_MODULE_DEFINITIONS,
-  IMPLEMENTED_APP_MODULES,
   findAppModule,
   groupPermissionsByAppModule,
   moduleOfPermission,
@@ -23,12 +22,6 @@ describe('catálogo de módulos', () => {
     const prefixes = APP_MODULE_DEFINITIONS.flatMap((definition) => definition.permissionPrefixes);
 
     expect(new Set(prefixes).size).toBe(prefixes.length);
-  });
-
-  it('declara implementados solo los módulos con ruta', () => {
-    const withRoute = APP_MODULE_DEFINITIONS.filter((definition) => definition.route !== null);
-
-    expect(IMPLEMENTED_APP_MODULES).toHaveLength(withRoute.length);
   });
 
   it('todo módulo tiene etiqueta y descripción', () => {

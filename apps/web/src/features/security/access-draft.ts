@@ -109,15 +109,6 @@ export function diffAccess(draft: AccessDraft, role: RoleSummary): AccessDiff {
   };
 }
 
-export function isEmptyDiff(diff: AccessDiff): boolean {
-  return (
-    diff.addedModules.length === 0 &&
-    diff.removedModules.length === 0 &&
-    diff.addedPermissions.length === 0 &&
-    diff.removedPermissions.length === 0
-  );
-}
-
 function missingFrom<TValue>(values: TValue[], reference: TValue[]): TValue[] {
   const known = new Set(reference);
 

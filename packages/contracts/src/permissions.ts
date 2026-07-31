@@ -38,44 +38,10 @@ export type Permission = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];
 
 export const ALL_PERMISSIONS: readonly Permission[] = Object.values(PERMISSIONS);
 
-/**
- * Módulos declarados. Cada módulo es una unidad funcional independiente
- * y agrupa sus propios permisos.
- */
-export const MODULES = {
-  USERS: 'users',
-  ROLES: 'roles',
-  PERMISSIONS: 'permissions',
-  DASHBOARD: 'dashboard',
-  TICKETS: 'tickets',
-  MAPS: 'maps',
-  ACTIVITY_LOGS: 'activity-logs',
-  SETTINGS: 'settings',
-} as const;
-
-export type ModuleName = (typeof MODULES)[keyof typeof MODULES];
-
 /** Extrae el módulo al que pertenece un permiso. */
 export function getPermissionModule(permission: Permission): string {
   const [module] = permission.split('.');
   return module ?? '';
-}
-
-/** Agrupa una lista de permisos por módulo. */
-export function groupPermissionsByModule(
-  permissions: readonly Permission[],
-): Record<string, Permission[]> {
-  const grouped: Record<string, Permission[]> = {};
-  for (const permission of permissions) {
-    const module = getPermissionModule(permission);
-    const bucket = grouped[module];
-    if (bucket) {
-      bucket.push(permission);
-    } else {
-      grouped[module] = [permission];
-    }
-  }
-  return grouped;
 }
 
 /**

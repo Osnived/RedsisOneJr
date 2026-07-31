@@ -1,3 +1,4 @@
+import { EMPTY_DATE, formatDateTime } from '@/shared/lib/format-date-time';
 import {
   operatorNeedsValue,
   type AdvancedFilter,
@@ -92,9 +93,12 @@ export function toFilterText(value: unknown): string {
   }
 
   if (value instanceof Date) {
-    return Number.isNaN(value.getTime())
-      ? ''
-      : value.toLocaleDateString('es').toLocaleLowerCase('es');
+    // Se compara contra el mismo texto que muestra la tabla, y con el mismo
+    // formateador: si el formato cambiara, filtrar seguiría encontrando lo que
+    // se ve. Una fecha inválida queda vacía para que "vacío" la encuentre.
+    const text = formatDateTime(value, 'date');
+
+    return text === EMPTY_DATE ? '' : text.toLocaleLowerCase('es');
   }
 
   if (typeof value === 'boolean') {

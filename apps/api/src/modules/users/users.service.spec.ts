@@ -16,6 +16,7 @@ function buildUser(overrides: Partial<UserWithAccess> = {}): UserWithAccess {
     lastLoginAt: null,
     createdAt: new Date('2026-01-01T00:00:00.000Z'),
     roles: ['administrador'],
+    roleIds: ['role-1'],
     modules: [...ALL_APP_MODULES],
     permissions: [PERMISSIONS.USERS_VIEW],
     ...overrides,

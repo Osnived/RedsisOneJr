@@ -157,6 +157,53 @@ almacena. Cuando difieren, la conversión es explícita y vive en un solo sitio
 (`user-form.schema.ts` es el ejemplo: separa Nombre y Apellidos y los une al
 guardar).
 
+## Las fechas se almacenan como `DateTime` y se pintan con un solo componente
+
+Regla global desde el Release 0.6.
+
+En Prisma, todo campo de fecha es `DateTime`, nunca `Date`. Un campo sin hora no se
+puede ampliar después sin migrar datos.
+
+En los contratos viajan como texto ISO 8601.
+
+En el frontend ninguna feature las formatea:
+
+```tsx
+// Mal: cada feature decide su formato
+<span>{new Date(ticket.createdAt).toLocaleDateString('es')}</span>
+
+// Bien
+<DateTime value={ticket.createdAt} />
+<DateTime value={ticket.createdAt} format="date" />
+```
+
+`shared/components/ui/date-time.tsx` es el único sitio que las renderiza, y
+`shared/lib/format-date-time.ts` el único que las convierte en texto. Cambiar el
+formato, la zona horaria o el idioma se hace en un archivo.
+
+## La autorización se pregunta, no se calcula
+
+Ningún componente lee `user.permissions`, y **nunca** se compara el nombre de un
+rol:
+
+```ts
+// Prohibido
+if (user.roles.includes('administrador')) { ... }
+if (user.permissions.includes('tickets.edit')) { ... }
+
+// Único camino
+const auth = useAuthorization();
+if (auth.canAccess(APP_MODULES.TICKETS)) { ... }
+if (auth.can(PERMISSIONS.TICKETS_EDIT)) { ... }
+```
+
+Son dos preguntas distintas: `canAccess` pregunta si el módulo existe para el
+usuario, `can` si puede ejecutar una acción. La segunda comprueba también la
+primera.
+
+El motivo es que cómo se calculan los accesos cambia —hoy se acumulan los roles,
+mañana habrá alcance y vigencia— y ese cálculo no debe conocerlo ninguna pantalla.
+
 ## Sin `setState` dentro de un efecto
 
 Provoca renders en cascada y el lint lo rechaza. Para ajustar estado ante un

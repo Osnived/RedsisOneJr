@@ -4,6 +4,14 @@ import { PERMISSIONS, type RoleSummary } from '@redsis/contracts';
 import { RequirePermissions } from '../../common/decorators/require-permissions.decorator';
 import { RolesService } from './roles.service';
 
+/**
+ * Consulta de roles para el resto de la plataforma.
+ *
+ * A propósito **no** exige acceso al módulo Seguridad: quien administra usuarios
+ * necesita ver los nombres de los roles para asignarlos, y obligarle a entrar en
+ * Seguridad para eso le daría mucho más de lo que necesita. La administración de
+ * accesos vive en `/security`.
+ */
 @ApiTags('Roles')
 @ApiBearerAuth()
 @Controller('roles')

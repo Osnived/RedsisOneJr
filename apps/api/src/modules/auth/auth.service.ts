@@ -122,6 +122,7 @@ export class AuthService {
       email: user.email,
       permissions: user.permissions,
       roles: user.roles,
+      modules: user.modules,
     };
 
     const tokens = await this.tokenService.issue(payload);
@@ -162,6 +163,7 @@ function toAuthenticatedUser(user: UserWithAccess): AuthenticatedUser {
     fullName: user.fullName,
     isActive: user.isActive,
     roles: user.roles,
+    modules: user.modules,
     permissions: user.permissions,
   };
 }

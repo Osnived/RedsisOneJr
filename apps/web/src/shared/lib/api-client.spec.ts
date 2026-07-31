@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { AuthTokens } from '@redsis/contracts';
+import { ALL_APP_MODULES, type AuthTokens } from '@redsis/contracts';
 import { ApiError, apiClient } from './api-client';
 import { useAuthStore } from '@/stores/auth.store';
 
@@ -20,6 +20,7 @@ function authenticate(): void {
       fullName: 'Administrador',
       isActive: true,
       roles: ['administrador'],
+      modules: ALL_APP_MODULES.slice(),
       permissions: [],
     },
     TOKENS,
@@ -118,6 +119,7 @@ describe('apiClient', () => {
               fullName: 'Administrador',
               isActive: true,
               roles: [],
+              modules: ALL_APP_MODULES.slice(),
               permissions: [],
             },
             tokens: { accessToken: 'access-2', refreshToken: 'refresh-2', expiresIn: 900 },
@@ -175,6 +177,7 @@ describe('apiClient', () => {
                 fullName: 'Administrador',
                 isActive: true,
                 roles: [],
+                modules: ALL_APP_MODULES.slice(),
                 permissions: [],
               },
               tokens: { accessToken: 'access-2', refreshToken: 'refresh-2', expiresIn: 900 },

@@ -1,6 +1,6 @@
 import { ConflictException, NotFoundException } from '@nestjs/common';
 import { Test, type TestingModule } from '@nestjs/testing';
-import { PERMISSIONS } from '@redsis/contracts';
+import { ALL_APP_MODULES, PERMISSIONS } from '@redsis/contracts';
 import { ActivityLogService } from '../activity-log/activity-log.service';
 import { PasswordService } from '../auth/password.service';
 import { UserRepository } from './user.repository';
@@ -16,6 +16,7 @@ function buildUser(overrides: Partial<UserWithAccess> = {}): UserWithAccess {
     lastLoginAt: null,
     createdAt: new Date('2026-01-01T00:00:00.000Z'),
     roles: ['administrador'],
+    modules: [...ALL_APP_MODULES],
     permissions: [PERMISSIONS.USERS_VIEW],
     ...overrides,
   };

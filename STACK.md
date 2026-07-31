@@ -237,6 +237,28 @@ Nunca escribir SQL dentro de servicios.
 
 ---
 
+## Fechas y horas
+
+Regla global obligatoria desde el Release 0.6.
+
+Todo campo de fecha se almacena como:
+
+DateTime
+
+Nunca:
+
+Date
+
+Un campo sin hora no se puede ampliar después sin migrar datos, y casi todo lo que
+parece "solo una fecha" acaba necesitando la hora.
+
+En los contratos compartidos las fechas viajan como texto ISO 8601.
+
+En el frontend se renderizan únicamente con el componente compartido `DateTime`.
+Ninguna feature formatea fechas por su cuenta.
+
+---
+
 ## Base de Datos Principal
 
 PostgreSQL

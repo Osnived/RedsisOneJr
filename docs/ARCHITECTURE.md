@@ -96,15 +96,115 @@ agrupan permisos.
 list() { ... }
 ```
 
-Dos guards actúan de forma global:
+### Dos puertas, no una
+
+Desde el Release 0.6 el acceso tiene dos niveles, y son preguntas distintas:
+
+| Nivel              | Pregunta                             | Se declara con             |
+| ------------------ | ------------------------------------ | -------------------------- |
+| Acceso a módulo    | ¿Existe este módulo para el usuario? | `@RequireModule(...)`      |
+| Permiso por acción | ¿Puede ejecutar esta acción?         | `@RequirePermissions(...)` |
+
+Sin la primera, la segunda no se evalúa. Un rol al que se le retiró Tickets no
+entra aunque conserve `tickets.view` de una configuración anterior. Sin este
+nivel, retirar un módulo en la interfaz solo ocultaría el menú y la URL seguiría
+funcionando.
+
+Tres guards actúan de forma global, y el orden es parte del diseño:
 
 1. `JwtAuthGuard` exige sesión. Un endpoint queda público solo si se declara con
    `@Public()`: si alguien olvida protegerlo, queda protegido por omisión.
-2. `PermissionsGuard` verifica los permisos declarados. Se exigen todos los
+2. `ModuleAccessGuard` verifica el acceso al módulo. Va antes que los permisos
+   porque es la puerta de fuera.
+3. `PermissionsGuard` verifica los permisos declarados. Se exigen todos los
    listados, no uno cualquiera.
 
-El frontend también comprueba permisos, pero solo para no mostrar lo que no
-sirve. La autorización real siempre la aplica el backend.
+### El catálogo de módulos une los dos niveles
+
+`APP_MODULE_DEFINITIONS`, en los contratos compartidos, declara qué módulos
+existen. Cada uno lista sus `permissionPrefixes`, y eso es lo que permite que
+`roles.edit` pertenezca al módulo Seguridad: el prefijo de un permiso y la clave
+de su módulo no tienen por qué coincidir. Sin ese mapa habría hecho falta
+renombrar permisos ya almacenados.
+
+El catálogo declara también los módulos que aún no tienen pantalla (`route: null`).
+Se les puede conceder acceso desde ya; el menú solo dibuja los que existen. Cuando
+llegue Clientes, ningún rol guardado hay que revisar.
+
+Una invariante sostiene el diseño y está cubierta por pruebas: **todo permiso del
+catálogo pertenece a algún módulo**. Un permiso que no se puede situar se niega
+siempre, así que quedaría inservible sin que nadie lo notara.
+
+### Una sola vía en el frontend
+
+El frontend también comprueba el acceso, pero solo para no mostrar lo que no
+sirve: **la autorización real siempre la aplica el backend**, y devuelve 403
+aunque se evite la pantalla.
+
+Toda la aplicación pregunta por `useAuthorization()`, que expone `can()` y
+`canAccess()`. Ningún componente lee `user.permissions` ni compara nombres de rol.
+El store de sesión guarda la sesión y nada más: si respondiera preguntas de
+autorización, habría dos vías y acabarían divergiendo.
+
+`can()` comprueba también el acceso al módulo, por la misma razón que el guard del
+backend.
+
+La protección de rutas vive en la ruta contenedora y deduce el módulo del camino a
+través del catálogo. Así una pantalla nueva queda protegida por declarar su ruta,
+y ninguna página necesita —ni puede olvidarse de— comprobarlo.
+
+### Acceso total garantizado
+
+Un rol marcado con `hasFullAccess` **calcula** su acceso desde el catálogo en lugar
+de leerlo de la base de datos. Recibe todos los módulos y permisos que existan,
+incluidos los que se añadan después, y su acceso no se puede recortar ni
+desactivar.
+
+Es un campo del rol y no una comparación por su nombre: renombrar "administrador"
+no desarma la garantía, y decidir por el cargo está prohibido (ver AGENTS.md). El
+objetivo es que la administración de la plataforma no pueda quedarse fuera por una
+configuración incompleta, que es un fallo del que no se sale desde la interfaz.
+
+### Trazabilidad de los cambios de acceso
+
+Cambiar los accesos de un rol exige un motivo. La regla vive en el contrato
+compartido, así que la exigen por igual la pantalla y la API.
+
+Los accesos y su auditoría se escriben **en la misma transacción**: un cambio de
+permisos sin rastro es exactamente lo que el módulo Seguridad existe para impedir.
+
+Se guarda el antes y el después completos, no la diferencia. Reconstruir el estado
+a partir de diferencias exige que la cadena esté intacta desde el origen, y una
+sola pérdida la vuelve inútil.
+
+### Cuándo se aplica un cambio de permisos
+
+Los accesos se leen del access token, que dura pocos minutos. Un cambio tarda hasta
+ese tiempo en aplicarse: es el precio de no consultar PostgreSQL en cada petición.
+Si alguna vez hace falta revocación inmediata, la salida es invalidar sesiones, no
+consultar en cada llamada.
+
+## Fechas y horas
+
+Una sola forma de representar el tiempo, de la base de datos a la pantalla:
+
+| Capa      | Forma                               |
+| --------- | ----------------------------------- |
+| Prisma    | `DateTime`, nunca `Date`            |
+| Contratos | texto ISO 8601                      |
+| Frontend  | el componente compartido `DateTime` |
+
+`DateTime` en Prisma y no `Date` porque un campo sin hora no se puede ampliar
+después sin migrar datos, y casi todo lo que parece "solo una fecha" acaba
+necesitando la hora: cuándo se creó, cuándo se cerró, cuándo caducó.
+
+En el frontend **ninguna feature formatea fechas por su cuenta**. Todas pasan por
+`shared/components/ui/date-time.tsx`, que se apoya en `formatDateTime`. Así el día
+que cambie el formato, la zona horaria o el idioma, cambia en un solo archivo.
+
+El componente usa `<time dateTime>` para que el instante exacto quede en el marcado
+aunque en pantalla se muestre abreviado. Una fecha ilegible se marca como ausente
+en lugar de imprimir "Invalid Date": un dato ilegible no debe parecer un dato.
 
 ## Estado en el frontend
 

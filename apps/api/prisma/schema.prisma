@@ -28,29 +28,94 @@ model User {
   createdAt    DateTime  @default(now()) @map("created_at")
   updatedAt    DateTime  @updatedAt @map("updated_at")
 
-  roles        UserRole[]
-  sessions     Session[]
-  activityLogs ActivityLog[]
-  settings     Setting[]
-  zones        UserZone[]
+  roles           UserRole[]
+  sessions        Session[]
+  activityLogs    ActivityLog[]
+  settings        Setting[]
+  zones           UserZone[]
+  roleAccessAudit RoleAccessAudit[]
 
   @@index([isActive])
   @@map("users")
 }
 
-/// Conjunto de permisos previamente definido. Los roles únicamente agrupan permisos.
+/// Conjunto de accesos previamente definido. Los roles únicamente agrupan accesos.
+///
+/// El acceso tiene dos niveles: a qué módulos entra el rol (`modules`) y qué
+/// acciones puede ejecutar dentro (`permissions`).
+///
+/// Preparado y sin implementar (ver Release 0.6): un rol podría declarar un rol
+/// padre del que hereda accesos. Se resolvería al calcular el acceso efectivo,
+/// no al guardarlo, para que cambiar el padre se refleje sin reescribir a los
+/// hijos.
 model Role {
   id          String   @id @default(uuid()) @db.Uuid
   name        String   @unique
   description String?
   isSystem    Boolean  @default(false) @map("is_system")
+  /// Un rol desactivado conserva su configuración y deja de conceder acceso.
+  isActive    Boolean  @default(true) @map("is_active")
+  /// Concede todo lo que exista, ahora y en el futuro.
+  ///
+  /// El acceso de estos roles se calcula, no se almacena: cuando se añade un
+  /// módulo o un permiso, ya lo tienen sin necesidad de migrar datos ni de que
+  /// alguien se acuerde de marcarlo. Es lo que garantiza que la administración
+  /// de la plataforma nunca se quede fuera por una configuración incompleta.
+  ///
+  /// No se deduce del nombre del rol: renombrar "administrador" no debe
+  /// desarmar la garantía.
+  hasFullAccess Boolean @default(false) @map("has_full_access")
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
   users       UserRole[]
   permissions RolePermission[]
+  modules     RoleModule[]
+  accessAudit RoleAccessAudit[]
 
+  @@index([isActive])
   @@map("roles")
+}
+
+/// Acceso de un rol a un módulo de la plataforma.
+///
+/// El módulo se guarda por su clave y no como relación a una tabla: el catálogo
+/// de módulos vive en el código (`APP_MODULE_DEFINITIONS`), porque un módulo
+/// existe cuando alguien lo programa, no cuando alguien inserta una fila.
+model RoleModule {
+  roleId    String   @map("role_id") @db.Uuid
+  module    String
+  grantedAt DateTime @default(now()) @map("granted_at")
+
+  role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, module])
+  @@index([module])
+  @@map("role_modules")
+}
+
+/// Cambio de acceso sobre un rol. Inmutable: no se edita ni se elimina.
+///
+/// Guarda el antes y el después completos en lugar de la diferencia:
+/// reconstruir el estado a partir de diferencias exige la cadena intacta desde
+/// el origen, y una sola pérdida la vuelve inútil.
+model RoleAccessAudit {
+  id                  String   @id @default(uuid()) @db.Uuid
+  roleId              String   @map("role_id") @db.Uuid
+  /// Nulo si el usuario que hizo el cambio se eliminó después.
+  userId              String?  @map("user_id") @db.Uuid
+  reason              String
+  previousModules     String[] @map("previous_modules")
+  newModules          String[] @map("new_modules")
+  previousPermissions String[] @map("previous_permissions")
+  newPermissions      String[] @map("new_permissions")
+  occurredAt          DateTime @default(now()) @map("occurred_at")
+
+  role Role  @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([roleId, occurredAt])
+  @@map("role_access_audits")
 }
 
 /// Acción específica autorizada dentro del sistema. Unidad mínima de autorización.
@@ -68,6 +133,11 @@ model Permission {
   @@map("permissions")
 }
 
+/// Rol asignado a un usuario.
+///
+/// Es una relación de muchos a muchos, así que un usuario puede tener varios
+/// roles desde el primer día. Lo que falta decidir es cómo se combinan dos roles
+/// con accesos distintos; hoy se acumulan.
 model UserRole {
   userId     String   @map("user_id") @db.Uuid
   roleId     String   @map("role_id") @db.Uuid
@@ -81,6 +151,11 @@ model UserRole {
   @@map("user_roles")
 }
 
+/// Permiso concedido a un rol.
+///
+/// Preparado y sin implementar (ver Release 0.6): los permisos temporales
+/// añadirían vigencia (`validFrom`, `validUntil`) y el cálculo del acceso
+/// efectivo descartaría lo caducado. Ese cálculo ya está en un solo sitio.
 model RolePermission {
   roleId       String   @map("role_id") @db.Uuid
   permissionId String   @map("permission_id") @db.Uuid

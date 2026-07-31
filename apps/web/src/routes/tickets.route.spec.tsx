@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { PERMISSIONS, type AuthTokens, type Permission } from '@redsis/contracts';
+import { ALL_APP_MODULES, PERMISSIONS, type AuthTokens, type Permission } from '@redsis/contracts';
 import { AdvancedTable, DataTable } from '@/shared/components/table';
+import { createAuthorizationService } from '@/shared/lib/authorization';
 import { TABLE_IDS } from '@/shared/lib/table/registry';
 import { getTicketRowId, ticketColumns } from '@/features/tickets/columns/ticket.columns';
 import { MOCK_TICKETS } from '@/features/tickets/mocks/tickets.mock';
@@ -18,6 +19,7 @@ function authenticate(permissions: Permission[]): void {
       fullName: 'Administrador',
       isActive: true,
       roles: ['administrador'],
+      modules: ALL_APP_MODULES.slice(),
       permissions,
     },
     TOKENS,
@@ -212,15 +214,42 @@ describe('Tickets con AdvancedTable', () => {
 });
 
 describe('Permiso de la pantalla de Tickets', () => {
+  /** La decisión se consulta al servicio, que es la única vía (ver AGENTS.md). */
+  function authorizationOfSession() {
+    const user = useAuthStore.getState().user;
+
+    return createAuthorizationService({
+      modules: user?.modules ?? [],
+      permissions: user?.permissions ?? [],
+    });
+  }
+
   it('un usuario con tickets.view puede consultar', () => {
     authenticate([PERMISSIONS.TICKETS_VIEW]);
 
-    expect(useAuthStore.getState().can(PERMISSIONS.TICKETS_VIEW)).toBe(true);
+    expect(authorizationOfSession().can(PERMISSIONS.TICKETS_VIEW)).toBe(true);
   });
 
   it('un usuario sin tickets.view no puede consultar', () => {
     authenticate([PERMISSIONS.USERS_VIEW]);
 
-    expect(useAuthStore.getState().can(PERMISSIONS.TICKETS_VIEW)).toBe(false);
+    expect(authorizationOfSession().can(PERMISSIONS.TICKETS_VIEW)).toBe(false);
+  });
+
+  it('un usuario sin acceso al módulo tampoco, aunque conserve el permiso', () => {
+    useAuthStore.getState().setSession(
+      {
+        id: 'user-1',
+        email: 'admin@redsis.com',
+        fullName: 'Administrador',
+        isActive: true,
+        roles: ['administrador'],
+        modules: [],
+        permissions: [PERMISSIONS.TICKETS_VIEW],
+      },
+      TOKENS,
+    );
+
+    expect(authorizationOfSession().can(PERMISSIONS.TICKETS_VIEW)).toBe(false);
   });
 });

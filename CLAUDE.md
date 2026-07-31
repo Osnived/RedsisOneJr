@@ -12,11 +12,24 @@ Estado actual, deuda conocida y próximas acciones:
 
 @PROJECT_STATUS.md
 
-## Alcance del último release
+Deuda conocida, con causa y coste:
 
-Los quince MVP del Release 0.5 están entregados. El documento se conserva porque
-define el alcance de lo que existe hoy y las decisiones que lo justifican; el
-siguiente release tendrá su propio archivo.
+@TECH_DEBT.md
+
+## Qué viene después
+
+@NEXT.md
+
+## Historia
+
+Lo entregado en cada release, sin reescribir el pasado:
+
+@CHANGELOG.md
+
+## Alcance de los releases entregados
+
+Se conservan porque definen el alcance de lo que existe hoy y las decisiones que
+lo justifican. El release en curso tendrá su propio archivo.
 
 @RELEASE_0.5.md
 
@@ -44,7 +57,7 @@ siguiente release tendrá su propio archivo.
 2. **STACK.md** — stack obligatorio
 3. **CODING_STANDARDS.md** — cómo se escribe el código
 4. **PROJECT_CONTEXT.md** — contexto de negocio y lenguaje común
-5. **RELEASE_0.5.md** — alcance del release entregado
+5. **RELEASE_0.x.md** — alcance del release correspondiente
 6. **MVP_PLAYBOOK.md** — método de trabajo
 
 Ninguna sugerencia automática tiene prioridad sobre estos documentos.
@@ -60,6 +73,7 @@ registradas en la sección 4 de PROJECT_STATUS.md.
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — cómo está construida la plataforma
 - [docs/GETTING_STARTED.md](docs/GETTING_STARTED.md) — cómo levantarla
 - [docs/adr/](docs/adr/) — decisiones arquitectónicas registradas
+- [docs/releases/](docs/releases/) — resumen de cierre de cada release
 - [BACKLOG.md](BACKLOG.md) — backlog del framework de tablas (terminado)
 
 ---

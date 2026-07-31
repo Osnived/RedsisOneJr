@@ -10,9 +10,15 @@ import {
   Query,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { PERMISSIONS, type PaginatedResult, type UserSummary } from '@redsis/contracts';
+import {
+  APP_MODULES,
+  PERMISSIONS,
+  type PaginatedResult,
+  type UserSummary,
+} from '@redsis/contracts';
 import { Ip } from '@nestjs/common';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import { RequireModule } from '../../common/decorators/require-module.decorator';
 import { RequirePermissions } from '../../common/decorators/require-permissions.decorator';
 import { PaginationQueryDto } from '../../common/dto/pagination-query.dto';
 import type { RequestUser } from '../../common/types/request-user';
@@ -22,6 +28,7 @@ import { UsersService } from './users.service';
 
 @ApiTags('Usuarios')
 @ApiBearerAuth()
+@RequireModule(APP_MODULES.USERS)
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}

@@ -1,6 +1,6 @@
 import { ForbiddenException, type ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { PERMISSIONS, type Permission } from '@redsis/contracts';
+import { ALL_APP_MODULES, PERMISSIONS, type Permission } from '@redsis/contracts';
 import { PermissionsGuard } from './permissions.guard';
 import type { RequestUser } from '../types/request-user';
 
@@ -13,7 +13,13 @@ function buildContext(user?: RequestUser): ExecutionContext {
 }
 
 function buildUser(permissions: Permission[]): RequestUser {
-  return { id: 'user-1', email: 'admin@redsis.com', roles: ['administrador'], permissions };
+  return {
+    id: 'user-1',
+    email: 'admin@redsis.com',
+    roles: ['administrador'],
+    modules: [...ALL_APP_MODULES],
+    permissions,
+  };
 }
 
 describe('PermissionsGuard', () => {

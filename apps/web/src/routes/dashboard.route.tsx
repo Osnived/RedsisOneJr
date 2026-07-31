@@ -10,6 +10,7 @@ import {
 } from '@/shared/components/ui/card';
 import { Spinner } from '@/shared/components/ui/spinner';
 import { usersApi } from '@/features/users/users.api';
+import { useAuthorization } from '@/shared/hooks/use-authorization';
 import { useAuthStore } from '@/stores/auth.store';
 import { authenticatedRoute } from './authenticated.route';
 
@@ -21,14 +22,14 @@ export const dashboardRoute = createRoute({
 
 function DashboardPage(): React.JSX.Element {
   const user = useAuthStore((state) => state.user);
-  const can = useAuthStore((state) => state.can);
+  const auth = useAuthorization();
 
   // Solo se consulta lo que el usuario tiene permiso de ver: así se evita
   // provocar un 403 desde la propia interfaz.
   const usersQuery = useQuery({
     queryKey: ['users', { page: 1, pageSize: 1 }],
     queryFn: () => usersApi.list(1, 1),
-    enabled: can(PERMISSIONS.USERS_VIEW),
+    enabled: auth.can(PERMISSIONS.USERS_VIEW),
   });
 
   return (
@@ -53,7 +54,7 @@ function DashboardPage(): React.JSX.Element {
           </CardHeader>
         </Card>
 
-        {can(PERMISSIONS.USERS_VIEW) ? (
+        {auth.can(PERMISSIONS.USERS_VIEW) ? (
           <Card>
             <CardHeader>
               <CardDescription>Usuarios registrados</CardDescription>

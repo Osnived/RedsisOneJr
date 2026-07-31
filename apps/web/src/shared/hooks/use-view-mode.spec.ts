@@ -1,6 +1,11 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { renderHook } from '@testing-library/react';
-import { SYSTEM_ROLES, type AuthTokens, type AuthenticatedUser } from '@redsis/contracts';
+import {
+  ALL_APP_MODULES,
+  SYSTEM_ROLES,
+  type AuthTokens,
+  type AuthenticatedUser,
+} from '@redsis/contracts';
 import { useAuthStore } from '@/stores/auth.store';
 import { useViewMode } from './use-view-mode';
 
@@ -13,6 +18,7 @@ function authenticateWithRole(role: string): void {
     fullName: 'Persona',
     isActive: true,
     roles: [role],
+    modules: ALL_APP_MODULES.slice(),
     permissions: [],
   };
 

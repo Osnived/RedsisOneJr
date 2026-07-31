@@ -1,5 +1,4 @@
-import { Eye } from 'lucide-react';
-import { AdvancedTable, RowActions } from '@/shared/components/table';
+import { AdvancedTable } from '@/shared/components/table';
 import { TABLE_IDS } from '@/shared/lib/table/registry';
 import { getTicketRowId, ticketColumns } from '../columns/ticket.columns';
 import type { TicketViewProps } from './ticket-view.types';
@@ -10,6 +9,10 @@ import type { TicketViewProps } from './ticket-view.types';
  * Es la vista para escritorio y para cualquier perfil que necesite comparar
  * muchos servicios a la vez: vistas guardadas, filtros, agrupación y
  * configuración de columnas.
+ *
+ * Su cometido es **localizar** un ticket, no operar sobre él: la fila lleva a su
+ * pantalla y ahí ocurre toda la operación. Por eso no declara acciones de fila,
+ * aunque el framework las siga soportando para los módulos administrativos.
  *
  * No consulta datos: los recibe. Eso es lo que permite que convivir con las
  * tarjetas no duplique ni una petición.
@@ -33,13 +36,10 @@ export function TicketTableView({
       {...(onSelectionChange === undefined ? {} : { onRowSelectionChange: onSelectionChange })}
       searchPlaceholder="Buscar por ticket, cliente, sucursal..."
       emptyMessage="No hay tickets que coincidan con la búsqueda"
-      rowActions={(ticket) => (
-        <RowActions
-          row={ticket}
-          label={`Acciones del ticket ${ticket.number}`}
-          actions={[{ id: 'ver-detalle', label: 'Ver detalle', icon: Eye, onSelect: onViewDetail }]}
-        />
-      )}
+      rowNavigation={{
+        onSelect: onViewDetail,
+        label: (ticket) => `Abrir el ticket ${ticket.number}`,
+      }}
       // Tickets es el único módulo con tabla avanzada. Los administrativos
       // siguen con el BaseTable, que es lo que necesitan.
       capabilities={{ views: true, columnSettings: true, grouping: true, filters: true }}

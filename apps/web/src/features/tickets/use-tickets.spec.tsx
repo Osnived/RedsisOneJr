@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MOCK_TICKETS } from './mocks/tickets.mock';
-import { TicketsUnavailableError, ticketsApi } from './tickets.api';
-import { useTickets } from './use-tickets';
+import { TicketNotFoundError, TicketsUnavailableError, ticketsApi } from './tickets.api';
+import { useTicket, useTickets } from './use-tickets';
 
 function withQueryClient() {
   const queryClient = new QueryClient({
@@ -30,6 +30,16 @@ describe('ticketsApi', () => {
     await expect(ticketsApi.list({ shouldFail: true })).rejects.toThrow(
       /No se pudo consultar los tickets/,
     );
+  });
+
+  it('resuelve un solo ticket por su identificador', async () => {
+    const ticket = MOCK_TICKETS[2];
+
+    await expect(ticketsApi.getById('3')).resolves.toEqual(ticket);
+  });
+
+  it('distingue un identificador inexistente de un fallo del origen', async () => {
+    await expect(ticketsApi.getById('no-existe')).rejects.toBeInstanceOf(TicketNotFoundError);
   });
 });
 
@@ -62,5 +72,27 @@ describe('useTickets', () => {
 
     expect(result.current.error).toBeInstanceOf(Error);
     expect(result.current.error?.message).toMatch(/No se pudo consultar/);
+  });
+});
+
+describe('useTicket', () => {
+  it('entrega el ticket pedido', async () => {
+    const { result } = renderHook(() => useTicket('3'), { wrapper: withQueryClient() });
+
+    await waitFor(() => {
+      expect(result.current.isSuccess).toBe(true);
+    });
+
+    expect(result.current.data?.number).toBe('INC-2026-000103');
+  });
+
+  it('expone el error cuando el ticket no existe', async () => {
+    const { result } = renderHook(() => useTicket('no-existe'), { wrapper: withQueryClient() });
+
+    await waitFor(() => {
+      expect(result.current.isError).toBe(true);
+    });
+
+    expect(result.current.error?.message).toMatch(/No existe ningún ticket/);
   });
 });

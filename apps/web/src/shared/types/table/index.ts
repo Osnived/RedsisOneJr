@@ -5,7 +5,12 @@ export {
   ROW_ACTIONS_COLUMN_ID,
   ROW_SELECTION_COLUMN_ID,
 } from './column';
-export type { DataTablePresentationProps, DataTableProps, DataTableViewProps } from './data-table';
+export type {
+  DataTablePresentationProps,
+  DataTableProps,
+  DataTableViewProps,
+  RowNavigation,
+} from './data-table';
 export type {
   AdvancedCapability,
   AdvancedTableCapabilities,

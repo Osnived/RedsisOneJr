@@ -3,6 +3,32 @@ import type { ColumnDefinition } from './column';
 import type { TableMode, TableQuery } from './query';
 
 /**
+ * Navegación desde una fila.
+ *
+ * Existe para las tablas cuyo cometido es **localizar** un registro y no operar
+ * sobre él: pulsar la fila lleva a su pantalla. Es lo contrario de `rowActions`,
+ * que ejecuta acciones sin salir de la tabla; una tabla puede usar cualquiera de
+ * las dos, y declarar ambas confundiría a quien la usa.
+ *
+ * Las dos funciones viajan juntas y no como propiedades independientes porque una
+ * fila accionable necesita las dos: qué hacer al pulsarla y cómo se llama su
+ * destino. Separadas, se podría declarar la primera sin la segunda y la fila
+ * quedaría accionable sin nombre para quien no ve la pantalla.
+ */
+export interface RowNavigation<TData> {
+  /** Se invoca al pulsar la fila, con ratón o con el teclado. */
+  onSelect: (row: TData) => void;
+
+  /**
+   * Nombre accesible de la fila, por ejemplo `Abrir el ticket INC-2026-000101`.
+   *
+   * El contenido de las celdas no sirve: describe el registro, no a dónde lleva
+   * pulsarlo.
+   */
+  label: (row: TData) => string;
+}
+
+/**
  * Propiedades que solo afectan a cómo se dibuja la tabla.
  *
  * Se separan de las del motor porque son las únicas que cambian cuando la misma
@@ -78,6 +104,15 @@ export interface DataTableProps<TData> extends DataTablePresentationProps {
    * fila actúan. Se renderiza en una columna fija al final, no ocultable.
    */
   rowActions?: (row: TData) => ReactNode;
+
+  /**
+   * Convierte cada fila en el acceso a la pantalla del registro.
+   *
+   * Un clic sobre un control dentro de la fila —la casilla de selección, un menú
+   * de acciones— no navega: el framework lo distingue por sí solo, así que ningún
+   * módulo tiene que detener la propagación en sus celdas.
+   */
+  rowNavigation?: RowNavigation<TData>;
 
   /**
    * Habilita la selección de filas con casillas de verificación.

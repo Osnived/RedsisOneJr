@@ -2,7 +2,10 @@ import { ChevronDown, ChevronRight } from 'lucide-react';
 import { flexRender, type Row, type Table } from '@tanstack/react-table';
 import { cn } from '@/shared/lib/utils';
 import { formatCellValue } from '@/shared/lib/table/format-cell-value';
+import type { RowNavigation } from '@/shared/types/table';
 import { ALIGNMENT_CLASS } from './alignment';
+
+const ROW_CLASS = 'border-b border-border/50 last:border-0 hover:bg-muted/40';
 
 /**
  * Filas de la tabla.
@@ -15,32 +18,106 @@ import { ALIGNMENT_CLASS } from './alignment';
  * agrupación no existe ninguna, así que una tabla que no agrupa se dibuja
  * exactamente igual que antes de que esta capacidad existiera.
  */
-export function TableBody<TData>({ table }: { table: Table<TData> }): React.JSX.Element {
+export function TableBody<TData>({
+  table,
+  rowNavigation = null,
+}: {
+  table: Table<TData>;
+  /** Null cuando las filas del módulo no llevan a ninguna pantalla. */
+  rowNavigation?: RowNavigation<TData> | null;
+}): React.JSX.Element {
   const columnCount = table.getVisibleLeafColumns().length;
 
   return (
     <tbody>
-      {table.getRowModel().rows.map((row) =>
-        row.getIsGrouped() ? (
-          <GroupRow key={row.id} row={row} columnCount={columnCount} />
-        ) : (
-          <tr key={row.id} className="border-b border-border/50 last:border-0 hover:bg-muted/40">
-            {row.getVisibleCells().map((cell) => (
-              <td
-                key={cell.id}
-                style={{ width: cell.column.getSize() }}
-                className={cn(
-                  'truncate px-3 py-2 text-sm',
-                  ALIGNMENT_CLASS[cell.column.columnDef.meta?.align ?? 'left'],
-                )}
-              >
-                {flexRender(cell.column.columnDef.cell, cell.getContext())}
-              </td>
-            ))}
-          </tr>
-        ),
-      )}
+      {table
+        .getRowModel()
+        .rows.map((row) =>
+          row.getIsGrouped() ? (
+            <GroupRow key={row.id} row={row} columnCount={columnCount} />
+          ) : (
+            <DataRow key={row.id} row={row} rowNavigation={rowNavigation} />
+          ),
+        )}
     </tbody>
+  );
+}
+
+/**
+ * Fila de datos.
+ *
+ * Cuando el módulo declara navegación, la fila entera es el acceso al registro.
+ * Se hace sobre la propia `tr` y no con un enlace dentro de una celda porque el
+ * destino es la fila completa: obligar a acertar en una celda concreta convierte
+ * un gesto natural en un objetivo pequeño, y en un móvil eso se nota.
+ *
+ * A cambio hay que reponer a mano lo que un botón trae de serie: foco, teclado y
+ * nombre accesible. Sin navegación la fila se dibuja exactamente como antes.
+ */
+function DataRow<TData>({
+  row,
+  rowNavigation,
+}: {
+  row: Row<TData>;
+  rowNavigation: RowNavigation<TData> | null;
+}): React.JSX.Element {
+  const cells = row.getVisibleCells().map((cell) => (
+    <td
+      key={cell.id}
+      style={{ width: cell.column.getSize() }}
+      className={cn(
+        'truncate px-3 py-2 text-sm',
+        ALIGNMENT_CLASS[cell.column.columnDef.meta?.align ?? 'left'],
+      )}
+    >
+      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+    </td>
+  ));
+
+  if (rowNavigation === null) {
+    return <tr className={ROW_CLASS}>{cells}</tr>;
+  }
+
+  return (
+    <tr
+      tabIndex={0}
+      aria-label={rowNavigation.label(row.original)}
+      onClick={(event) => {
+        if (!isOwnControl(event.target)) {
+          rowNavigation.onSelect(row.original);
+        }
+      }}
+      onKeyDown={(event) => {
+        if ((event.key !== 'Enter' && event.key !== ' ') || isOwnControl(event.target)) {
+          return;
+        }
+
+        // Sin esto, el espacio desplazaría la página además de abrir la fila.
+        event.preventDefault();
+        rowNavigation.onSelect(row.original);
+      }}
+      className={cn(
+        ROW_CLASS,
+        'cursor-pointer focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring',
+      )}
+    >
+      {cells}
+    </tr>
+  );
+}
+
+/**
+ * Distingue un gesto dirigido a un control de dentro de la fila.
+ *
+ * La casilla de selección y el menú de acciones viven dentro de la propia fila:
+ * sin esta comprobación, marcar un registro lo abriría también. Se resuelve aquí,
+ * en un solo sitio, en lugar de exigir que cada celda que dibuje un control se
+ * acuerde de detener la propagación.
+ */
+function isOwnControl(target: EventTarget | null): boolean {
+  return (
+    target instanceof Element &&
+    target.closest('a, button, input, label, select, textarea, [role="menuitem"]') !== null
   );
 }
 

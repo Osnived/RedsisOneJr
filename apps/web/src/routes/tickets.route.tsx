@@ -5,6 +5,7 @@ import { Alert } from '@/shared/components/ui/alert';
 import { Button } from '@/shared/components/ui/button';
 import { useViewMode } from '@/shared/hooks/use-view-mode';
 import { TicketView } from '@/features/tickets/views';
+import { useOpenTicket } from '@/features/tickets/use-open-ticket';
 import { useTickets } from '@/features/tickets/use-tickets';
 import { Forbidden } from '@/shared/components/layout/forbidden';
 import { useAuthorization } from '@/shared/hooks/use-authorization';
@@ -19,9 +20,11 @@ export const ticketsRoute = createRoute({
 /**
  * Pantalla de Tickets.
  *
- * Consulta los datos una sola vez y decide cómo representarlos. Nada más: qué
- * vista corresponde lo resuelve `useViewMode`, y cómo se dibuja cada una es
- * asunto de la vista. La página no consulta el tamaño de la pantalla ni el rol.
+ * Su cometido es **localizar** un ticket: consulta los datos una sola vez, decide
+ * cómo representarlos y lleva a la pantalla del ticket elegido. La operación no
+ * ocurre aquí. Qué vista corresponde lo resuelve `useViewMode`, y cómo se dibuja
+ * cada una es asunto de la vista; la página no consulta el tamaño de la pantalla
+ * ni el rol.
  *
  * Los datos llegan por TanStack Query desde un servicio que hoy resuelve con
  * datos en memoria. Cuando se integre Baserow solo cambia el interior de ese
@@ -34,9 +37,9 @@ function TicketsPage(): React.JSX.Element {
   // Desaparece cuando exista el origen real.
   const [shouldFail, setShouldFail] = useState(false);
   const [selectedTickets, setSelectedTickets] = useState<Ticket[]>([]);
-  const [detailTicket, setDetailTicket] = useState<Ticket | null>(null);
 
   const ticketsQuery = useTickets({ shouldFail });
+  const openTicket = useOpenTicket();
   const { mode, reason } = useViewMode();
 
   if (!auth.can(PERMISSIONS.TICKETS_VIEW)) {
@@ -83,21 +86,12 @@ function TicketsPage(): React.JSX.Element {
         <Alert>Seleccionados: {selectedTickets.map((ticket) => ticket.number).join(', ')}</Alert>
       ) : null}
 
-      {detailTicket ? (
-        <Alert>
-          Detalle de {detailTicket.number}: la pantalla de detalle todavía no existe.{' '}
-          <button type="button" className="underline" onClick={() => setDetailTicket(null)}>
-            Cerrar
-          </button>
-        </Alert>
-      ) : null}
-
       <TicketView
         kind={mode}
         tickets={tickets}
         loading={ticketsQuery.isPending}
         error={ticketsQuery.error}
-        onViewDetail={setDetailTicket}
+        onViewDetail={openTicket}
         onSelectionChange={setSelectedTickets}
       />
     </div>

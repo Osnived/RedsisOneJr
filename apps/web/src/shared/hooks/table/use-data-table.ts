@@ -19,6 +19,7 @@ import type { ReactNode } from 'react';
 import {
   DEFAULT_PAGE_SIZE,
   type ColumnDefinition,
+  type RowNavigation,
   type TableMode,
   type TablePreferences,
   type TableQuery,
@@ -39,6 +40,7 @@ export interface UseDataTableOptions<TData> {
   data: TData[];
   getRowId: (row: TData) => string;
   rowActions?: (row: TData) => ReactNode;
+  rowNavigation?: RowNavigation<TData>;
   enableRowSelection?: boolean;
   onRowSelectionChange?: (selectedRows: TData[]) => void;
   mode?: TableMode;
@@ -50,6 +52,14 @@ export interface UseDataTableResult<TData> {
   /** Identificador de la tabla, para las capacidades que guardan datos propios. */
   tableId: string;
   table: Table<TData>;
+
+  /**
+   * Navegación declarada por el módulo, o null si sus filas no llevan a ningún
+   * sitio. Viaja por el contexto porque quien dibuja las filas es la vista, y no
+   * recibe las propiedades del módulo.
+   */
+  rowNavigation: RowNavigation<TData> | null;
+
   search: string;
   setSearch: (value: string) => void;
   /** Filas marcadas por el usuario, en el orden en que llegaron los datos. */
@@ -86,6 +96,7 @@ export function useDataTable<TData>({
   data,
   getRowId,
   rowActions,
+  rowNavigation,
   enableRowSelection = false,
   onRowSelectionChange,
   mode = 'client',
@@ -231,6 +242,7 @@ export function useDataTable<TData>({
   return {
     tableId,
     table,
+    rowNavigation: rowNavigation ?? null,
     search: preferences.search,
     setSearch: (value: string) => {
       update({ search: value, page: 1 });

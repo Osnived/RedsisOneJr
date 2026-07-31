@@ -32,7 +32,8 @@ export function DataTableView({
   columnControls,
   advancedControls,
 }: DataTableViewProps): React.JSX.Element {
-  const { table, search, setSearch, selectedRows, clearSelection } = useTableContext<unknown>();
+  const { table, rowNavigation, search, setSearch, selectedRows, clearSelection } =
+    useTableContext<unknown>();
 
   const columnCount = table.getVisibleLeafColumns().length;
   const { pageIndex, pageSize } = table.getState().pagination;
@@ -97,7 +98,7 @@ export function DataTableView({
       );
     }
 
-    return <TableBody table={table} />;
+    return <TableBody table={table} rowNavigation={rowNavigation} />;
   }
 }
 

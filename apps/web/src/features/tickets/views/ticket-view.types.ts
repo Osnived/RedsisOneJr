@@ -15,7 +15,12 @@ export interface TicketViewProps {
   loading: boolean;
   error: Error | null;
 
-  /** Se invoca al pedir el detalle de un ticket. */
+  /**
+   * Se invoca al elegir un ticket, y lleva a su pantalla.
+   *
+   * Ninguna vista actúa sobre el ticket: desde el Release 0.7 la operación entera
+   * ocurre en su espacio de trabajo, y estas vistas solo sirven para encontrarlo.
+   */
   onViewDetail: (ticket: Ticket) => void;
 
   /** Solo lo soportan las vistas que permiten seleccionar. */

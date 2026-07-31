@@ -4,6 +4,7 @@ import { dashboardRoute } from './dashboard.route';
 import { loginRoute } from './login.route';
 import { rootRoute } from './root.route';
 import { securityRoute } from './security.route';
+import { ticketDetailRoute } from './ticket-detail.route';
 import { ticketsRoute } from './tickets.route';
 import { usersRoute } from './users.route';
 
@@ -14,9 +15,20 @@ import { usersRoute } from './users.route';
  * el acceso al módulo correspondiente. Añadir un módulo es añadirlo a esa rama y
  * declarar su ruta en el catálogo compartido; la protección viene de serie.
  */
-const routeTree = rootRoute.addChildren([
+/**
+ * Se exporta para poder montar el árbol real en las pruebas de navegación: lo que
+ * hay que comprobar es que una ruta lleva a su pantalla, y reconstruir un árbol
+ * paralelo para la ocasión comprobaría la copia.
+ */
+export const routeTree = rootRoute.addChildren([
   loginRoute,
-  authenticatedRoute.addChildren([dashboardRoute, ticketsRoute, usersRoute, securityRoute]),
+  authenticatedRoute.addChildren([
+    dashboardRoute,
+    ticketsRoute,
+    ticketDetailRoute,
+    usersRoute,
+    securityRoute,
+  ]),
 ]);
 
 export const router = createRouter({ routeTree });

@@ -27,6 +27,21 @@ export class TicketsUnavailableError extends Error {
   }
 }
 
+/**
+ * Un identificador que no corresponde a ningún ticket.
+ *
+ * Es un caso normal y no un fallo del origen: llega escribiendo la URL a mano o
+ * volviendo a un enlace de un ticket que ya no está. Se distingue del error de
+ * disponibilidad porque la pantalla no debe invitar a reintentar algo que no
+ * existe.
+ */
+export class TicketNotFoundError extends Error {
+  constructor(ticketId: string) {
+    super(`No existe ningún ticket con el identificador ${ticketId}.`);
+    this.name = 'TicketNotFoundError';
+  }
+}
+
 export const ticketsApi = {
   list: (options: { shouldFail?: boolean } = {}): Promise<Ticket[]> =>
     new Promise((resolve, reject) => {
@@ -37,6 +52,26 @@ export const ticketsApi = {
         }
 
         resolve(MOCK_TICKETS);
+      }, MOCK_LATENCY_MS);
+    }),
+
+  /**
+   * Un solo ticket, el que abre su pantalla de detalle.
+   *
+   * Se consulta por separado y no se busca dentro del listado ya cargado: el
+   * detalle debe poder abrirse desde una URL, sin haber pasado por la tabla.
+   */
+  getById: (ticketId: string): Promise<Ticket> =>
+    new Promise((resolve, reject) => {
+      setTimeout(() => {
+        const ticket = MOCK_TICKETS.find((candidate) => candidate.id === ticketId);
+
+        if (ticket === undefined) {
+          reject(new TicketNotFoundError(ticketId));
+          return;
+        }
+
+        resolve(ticket);
       }, MOCK_LATENCY_MS);
     }),
 };

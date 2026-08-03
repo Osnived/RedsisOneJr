@@ -1,42 +1,12 @@
 import type { ReactNode } from 'react';
 import { Building2, CalendarDays, MapPin, UserRound } from 'lucide-react';
-import {
-  TICKET_PRIORITY_LABELS,
-  TICKET_STATUS_LABELS,
-  type Ticket,
-  type TicketPriority,
-  type TicketStatus,
-} from '@redsis/contracts';
+import type { Ticket } from '@redsis/contracts';
 import { Alert } from '@/shared/components/ui/alert';
-import { Badge, type BadgeVariant } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
 import { DateTime } from '@/shared/components/ui/date-time';
 import { Spinner } from '@/shared/components/ui/spinner';
+import { TicketPriorityBadge, TicketStatusBadge } from '../ticket-badges';
 import type { TicketViewProps } from './ticket-view.types';
-
-/**
- * Colores de estado y prioridad.
- *
- * Se repiten respecto al archivo de columnas a propósito: son dos
- * representaciones distintas del mismo dominio y compartirlos ataría la tabla a
- * las tarjetas. Si el catálogo crece, TypeScript obliga a completar ambos.
- */
-const STATUS_VARIANT: Record<TicketStatus, BadgeVariant> = {
-  nuevo: 'info',
-  asignado: 'info',
-  'en-ruta': 'warning',
-  'en-sitio': 'warning',
-  pendiente: 'neutral',
-  resuelto: 'success',
-  cancelado: 'danger',
-};
-
-const PRIORITY_VARIANT: Record<TicketPriority, BadgeVariant> = {
-  baja: 'neutral',
-  media: 'info',
-  alta: 'warning',
-  critica: 'danger',
-};
 
 /**
  * Tickets en tarjetas.
@@ -100,12 +70,8 @@ function TicketCard({
         </h2>
 
         <div className="flex flex-wrap gap-1.5">
-          <Badge variant={STATUS_VARIANT[ticket.status]}>
-            {TICKET_STATUS_LABELS[ticket.status]}
-          </Badge>
-          <Badge variant={PRIORITY_VARIANT[ticket.priority]}>
-            {TICKET_PRIORITY_LABELS[ticket.priority]}
-          </Badge>
+          <TicketStatusBadge status={ticket.status} />
+          <TicketPriorityBadge priority={ticket.priority} />
         </div>
       </div>
 

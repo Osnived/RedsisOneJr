@@ -1,6 +1,6 @@
 # TECH_DEBT.md
 
-Última actualización: 31/07/2026 (Sprint 0.6.1)
+Última actualización: 31/07/2026 (Release 0.7)
 
 Registro de deuda técnica. **Nada de aquí está implementado**: este documento
 existe para que lo pendiente esté escrito y no dependa de la memoria de nadie.
@@ -35,6 +35,28 @@ Se deja constancia para que nadie vuelva a registrarlo como pendiente:
 ---
 
 # 1. Riesgos abiertos
+
+## El Repository de Tickets vive en el frontend
+
+**Impacto: medio. Coste: medio.**
+
+La arquitectura sitúa Repository y Provider en NestJS (ver AGENTS.md). Tickets no
+tiene módulo en el backend, así que el Release 0.7 declaró la frontera en el
+frontend: `TicketRepository` como contrato, `mockTicketProvider` como
+implementación y `ticket-repository.ts` como único punto de sustitución.
+
+Es deliberado y está documentado, pero mientras exista hay una capa de acceso a
+datos donde la arquitectura no la quiere. Se resuelve en la integración con
+Baserow: el módulo Tickets en NestJS y un proveedor de este lado que llame a la
+API.
+
+## El estado de las acciones del ticket vive en memoria
+
+**Impacto: medio hoy, nulo después. Coste: nulo.**
+
+Asignar un técnico, cambiar la prioridad, agregar una observación o avanzar el
+flujo cambian el origen simulado, que se pierde al recargar la página. Es lo
+esperado mientras no haya origen real, pero al probar parece que algo no se guardó.
 
 ## Docker nunca se ha construido — **Deferred**
 
@@ -71,12 +93,44 @@ Es lo más barato de comprobar y lo que más información da.
 - **TicketCardView**: exige entrar con `tecnico@redsis.com` y reducir la ventana
   por debajo de 768 px.
 
+El espacio de trabajo del ticket ya no está en esta lista: se comprobó al cerrar el
+Release 0.7.
+
 El panel de navegador integrado no compone frames, así que la comprobación tiene
 que ser manual.
 
 ---
 
 # 2. Funcionalidad a medias
+
+## El timeline no muestra posición ni adjuntos
+
+**Impacto: bajo. Es intencionado.**
+
+`TicketEvent` transporta `location` y `attachments` y el origen los devuelve
+siempre vacíos. El MVP 5 del Release 0.7 pedía preparar la estructura sin
+implementar GPS, fotografías ni archivos, y así está: la entrada del timeline no
+cambiará de forma cuando se implementen.
+
+## Los formularios del coordinador no tienen pruebas de componente
+
+**Impacto: bajo. Coste: medio.**
+
+Asignar técnico y cambiar prioridad usan el `Select` de shadcn, que no funciona con
+clics sintéticos en jsdom. Es la misma razón por la que `UserForm` tampoco tiene
+pruebas de componente desde el Release 0.5.
+
+Lo que sí está cubierto: los esquemas de validación, las reglas del origen, y el
+formulario de observación completo —usa un `textarea`—. Lo que falta es exactamente
+lo que cubriría Playwright.
+
+## Crear y eliminar tickets siguen sin existir
+
+**Impacto: bajo. Es intencionado.**
+
+`tickets.create` y `tickets.delete` están en el catálogo y ninguna acción los usa.
+Depende de quién sea la fuente de verdad de los tickets, que es una decisión del
+próximo release (ver NEXT.md).
 
 ## Vistas guardadas: crear, aplicar y borrar, no actualizar
 

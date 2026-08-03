@@ -18,7 +18,7 @@ const TOKENS: AuthTokens = { accessToken: 'a', refreshToken: 'r', expiresIn: 900
 /**
  * La pantalla se monta sin enrutador, así que se sustituye lo único que lo
  * necesita: abrir un ticket. Que la navegación llegue de verdad a su pantalla lo
- * comprueba `ticket-workspace.spec.tsx` sobre el árbol de rutas real.
+ * comprueba `ticket-navigation.spec.tsx` sobre el árbol de rutas real.
  */
 const openTicket = vi.fn();
 

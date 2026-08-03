@@ -1,9 +1,23 @@
+import { Slot } from '@radix-ui/react-slot';
 import type { ComponentProps } from 'react';
 import { cn } from '@/shared/lib/utils';
 
-export function Card({ className, ...props }: ComponentProps<'div'>): React.JSX.Element {
+type CardProps = ComponentProps<'div'> & {
+  /**
+   * Aplica el aspecto de tarjeta al hijo en lugar de envolverlo en un `div`.
+   *
+   * Hace falta cuando la tarjeta **es** una región con nombre —una sección de una
+   * ficha, por ejemplo—: el elemento tiene que ser un `section` para que su título
+   * la nombre, y sin esto habría que copiar las clases de la tarjeta.
+   */
+  asChild?: boolean;
+};
+
+export function Card({ className, asChild = false, ...props }: CardProps): React.JSX.Element {
+  const Component = asChild ? Slot : 'div';
+
   return (
-    <div
+    <Component
       className={cn('rounded-lg border border-border bg-card text-card-foreground', className)}
       {...props}
     />

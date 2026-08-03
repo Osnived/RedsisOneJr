@@ -33,6 +33,8 @@ lo justifican. El release en curso tendrá su propio archivo.
 
 @RELEASE_0.5.md
 
+@RELEASE_0.7_TICKET_WORKSPACE.md
+
 ## Cómo se trabaja
 
 @MVP_PLAYBOOK.md
@@ -89,6 +91,7 @@ Antes de crear un archivo nuevo, comprobar si ya existe su sitio:
 | Una tabla                         | `DataTable`, o `AdvancedTable` si es Tickets |
 | Un formulario                     | `EntityModal` + `EntityForm` + `FormField`   |
 | Otra forma de ver un módulo       | `features/<dominio>/views/` y su registro    |
+| Una sección de una pantalla ficha | `DetailSection` + `DetailField`              |
 | Acceso a datos en el backend      | Repository + Provider del módulo             |
 | Un tipo que cruzan API y frontend | `packages/contracts/`                        |
 

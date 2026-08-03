@@ -14,6 +14,63 @@ Cada versión enlaza su documento de alcance y, cuando existe, su resumen en
 
 ---
 
+## [0.7.0] — 31/07/2026 — Ticket Workspace
+
+Alcance: [RELEASE_0.7_TICKET_WORKSPACE.md](RELEASE_0.7_TICKET_WORKSPACE.md).
+
+El Ticket pasa a ser el centro del sistema: la tabla solo sirve para localizarlo y
+toda la operación ocurre en su espacio de trabajo. Sigue sin integrarse Baserow.
+
+### Añadido
+
+- **Pantalla del ticket** (`/tickets/:id`) con cinco secciones con nombre y sin
+  pestañas: información general, timeline, auditoría, intervención y acciones.
+- **Cabecera reutilizable** del ticket con número, estado, prioridad, cliente,
+  sucursal, zona, técnico y fecha de creación.
+- **Timeline operativo**: qué ocurrió, quién y cuándo, de lo más reciente a lo más
+  antiguo. El contrato ya transporta posición y adjuntos —GPS y fotografías—,
+  declarados y sin implementar.
+- **Auditoría** del ticket como sección independiente del timeline: campo, valor
+  anterior, valor nuevo, usuario, fecha y hora. Solo lectura.
+- **Acciones del coordinador**: asignar o reasignar técnico, cambiar prioridad y
+  agregar observación, con la infraestructura de formularios compartida y validadas
+  con los esquemas del contrato.
+- **Flujo guiado del técnico**: seis pasos y una sola acción disponible en cada
+  momento, derivada de lo ya completado con `nextWorkflowStep`. Cada paso deja
+  rastro en el timeline y, si mueve el estado, en la auditoría.
+- **`rowNavigation` en el framework de tablas**: la fila entera lleva a la pantalla
+  del registro, con foco, teclado y nombre accesible, y sin que un clic en la
+  casilla de selección o en el menú de acciones navegue.
+- **`TicketRepository` y `mockTicketProvider`**: el contrato que consumen los hooks
+  y su implementación sobre el origen simulado. `ticket-repository.ts` es el único
+  sitio donde se decide de dónde salen los tickets.
+- **Contratos nuevos**: `TicketDetail`, `TicketEvent`, `TicketFieldChange`,
+  `TicketWorkflowStep` y los esquemas de las tres acciones del coordinador.
+- **Infraestructura compartida**: `DetailField` y `DetailFieldList` para fichas de
+  solo lectura, `DetailSection` para secciones con nombre, `Textarea`, y `asChild`
+  en `Card`.
+
+### Cambiado
+
+- **La tabla de Tickets ya no ejecuta acciones.** Se retiró el menú de fila; pulsar
+  la fila abre el ticket. Las tarjetas conservan su botón "Ver detalle" y llevan al
+  mismo sitio.
+- **El origen simulado guarda estado y aplica reglas.** Qué estado sigue a qué paso
+  y qué se registra lo decide el origen, no React (ver AGENTS.md), y la tabla y el
+  detalle leen del mismo sitio: cambiar la prioridad en el detalle se ve en la tabla.
+- **Los colores de estado y prioridad viven en un solo componente**
+  (`TicketStatusBadge`, `TicketPriorityBadge`). Antes se repetían en las columnas y
+  en las tarjetas, y la cabecera habría sido la tercera copia.
+- **`tickets.edit` se aplica de verdad**: sin ese permiso el ticket se consulta pero
+  no se opera.
+
+### Notas
+
+- Comprobado en un navegador real antes de integrar en `main`.
+- El estado del origen simulado vive en memoria y se pierde al recargar.
+
+---
+
 ## [0.6.1] — 31/07/2026 — Estabilización
 
 Alcance: `SPRINT_0.6.1_STABILIZATION.md`. Sin funcionalidad nueva: cierra las deudas

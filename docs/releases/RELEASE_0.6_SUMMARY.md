@@ -5,11 +5,9 @@ Rama: `feature/access-control` → `develop`
 Commit del release: `58ee086`
 Documento de alcance: `RELEASE_0.6_ACCESS_CONTROL.md`
 
-> **Nota sobre el nombre del archivo.** El release cerrado aquí es el **0.6**
-> (Access Control): el documento de alcance se llama `RELEASE_0.6_ACCESS_CONTROL.md`
-> y el 0.7 es la integración con Baserow, todavía sin empezar (ver
-> [NEXT.md](../../NEXT.md)). El archivo se creó con el nombre `0.7` porque así se
-> pidió; si la numeración correcta es 0.6, basta renombrarlo.
+> **Nota.** Este archivo se llamó `RELEASE_0.7_SUMMARY.md` por error y se renombró
+> al cerrar el Release 0.7, que es otra cosa: el espacio de trabajo del ticket (ver
+> [RELEASE_0.7_TICKET_WORKSPACE.md](../../RELEASE_0.7_TICKET_WORKSPACE.md)).
 
 ---
 

@@ -5,7 +5,7 @@ import { Alert } from '@/shared/components/ui/alert';
 import { Spinner } from '@/shared/components/ui/spinner';
 import { Forbidden } from '@/shared/components/layout/forbidden';
 import { useAuthorization } from '@/shared/hooks/use-authorization';
-import { TicketDetail } from '@/features/tickets/detail/ticket-detail';
+import { TicketWorkspace } from '@/features/tickets/detail/ticket-workspace';
 import { useTicket } from '@/features/tickets/use-tickets';
 import { authenticatedRoute } from './authenticated.route';
 
@@ -26,7 +26,7 @@ export const ticketDetailRoute = createRoute({
 });
 
 /**
- * Orquesta el detalle: pide el ticket y elige qué mostrar.
+ * Orquesta el espacio de trabajo: pide el ticket y elige qué mostrar.
  *
  * No dibuja el ticket. Eso es conocimiento del dominio y vive en la feature, que
  * recibe un ticket ya resuelto y no sabe nada de rutas ni de consultas.
@@ -69,6 +69,6 @@ function TicketDetailPage(): React.JSX.Element {
       return <Alert variant="destructive">{ticketQuery.error.message}</Alert>;
     }
 
-    return <TicketDetail ticket={ticketQuery.data} />;
+    return <TicketWorkspace ticket={ticketQuery.data} />;
   }
 }

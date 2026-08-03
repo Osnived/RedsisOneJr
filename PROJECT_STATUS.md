@@ -1,6 +1,6 @@
 # PROJECT_STATUS.md
 
-Última actualización: 31/07/2026
+Última actualización: 31/07/2026 (Release 0.7)
 
 Este documento es el punto de entrada para retomar el proyecto. Responde tres
 preguntas: **qué funciona hoy**, **qué falta**, y **qué hacer a continuación**.
@@ -12,18 +12,18 @@ Se actualiza al terminar cada MVP.
 # 1. Resumen en una línea
 
 Plataforma empresarial modular con autenticación propia, autorización de dos
-niveles administrable desde una pantalla, framework de tablas reutilizable y
-Tickets adaptándose al dispositivo. **Release 0.6 cerrado. Sin integrar Baserow
-todavía.**
+niveles administrable desde una pantalla, framework de tablas reutilizable y el
+Ticket como centro de la operación, con su propio espacio de trabajo.
+**Release 0.7 cerrado, comprobado en navegador e integrado en `main`. Sin integrar
+Baserow todavía.**
 
-| Métrica               | Valor                                              |
-| --------------------- | -------------------------------------------------- |
-| Pruebas               | 643 (84 API + 525 web + 34 contratos)              |
-| `any` en el código    | 0                                                  |
-| Componente más grande | Por debajo de 250 líneas                           |
-| Lint / tipos / build  | Limpios                                            |
-| Último commit         | `9ab0817` (Sprint 0.6.1, estabilización)           |
-| Rama de trabajo       | `feature/stabilization`, sin integrar en `develop` |
+| Métrica               | Valor                                          |
+| --------------------- | ---------------------------------------------- |
+| Pruebas               | 722 (84 API + 596 web + 42 contratos)          |
+| `any` en el código    | 0                                              |
+| Componente más grande | Por debajo de 250 líneas                       |
+| Lint / tipos / build  | Limpios                                        |
+| Rama                  | `main`, con los Releases 0.5, 0.6, 0.6.1 y 0.7 |
 
 ---
 
@@ -34,13 +34,14 @@ todavía.**
 Arrancar con las instrucciones de [docs/GETTING_STARTED.md](docs/GETTING_STARTED.md)
 y entrar con `admin@redsis.com` / `Redsis2026`.
 
-| Pantalla  | Ruta        | Estado                                                    |
-| --------- | ----------- | --------------------------------------------------------- |
-| Login     | `/login`    | Autenticación real contra la API                          |
-| Panel     | `/`         | Tarjetas con datos reales (rol, permisos, total usuarios) |
-| Tickets   | `/tickets`  | **Tabla avanzada**: vistas, filtros, agrupar, columnas    |
-| Usuarios  | `/users`    | **CRUD completo**: crear, editar, activar, suspender      |
-| Seguridad | `/security` | **Administración de accesos** con auditoría e historial   |
+| Pantalla  | Ruta           | Estado                                                    |
+| --------- | -------------- | --------------------------------------------------------- |
+| Login     | `/login`       | Autenticación real contra la API                          |
+| Panel     | `/`            | Tarjetas con datos reales (rol, permisos, total usuarios) |
+| Tickets   | `/tickets`     | **Tabla avanzada** para localizar: la fila abre el ticket |
+| Ticket    | `/tickets/:id` | **Espacio de trabajo**: timeline, auditoría y operación   |
+| Usuarios  | `/users`       | **CRUD completo**: crear, editar, activar, suspender      |
+| Seguridad | `/security`    | **Administración de accesos** con auditoría e historial   |
 
 Las pantallas `/roles` y `/permissions` **se retiraron** en el Release 0.6:
 Seguridad las reemplaza por completo.
@@ -107,6 +108,49 @@ compartido (`TableProvider`). Capacidades implementadas:
 Declaradas y **sin implementar**: `exports`, `kanban`, `timeline`, `maps`.
 Activarlas avisa por consola en lugar de fallar en silencio.
 
+## El Ticket como centro de la operación
+
+Desde el Release 0.7 la tabla solo sirve para **localizar** un ticket: pulsar la
+fila lleva a `/tickets/:id`, y ahí ocurre todo. La tabla ya no ejecuta acciones.
+
+| Sección             | Qué hace                                                    |
+| ------------------- | ----------------------------------------------------------- |
+| Cabecera            | Número, estado, prioridad, cliente, sucursal, zona, técnico |
+| Información general | Ficha completa del servicio, solo lectura                   |
+| Timeline            | Qué ocurrió, quién y cuándo, de lo más reciente             |
+| Auditoría           | Campo, valor anterior, valor nuevo, usuario, fecha y hora   |
+| Intervención        | Flujo guiado del técnico: una sola acción disponible        |
+| Acciones            | Coordinador: asignar técnico, prioridad, observación        |
+
+Son secciones con nombre, no pestañas. En escritorio las acciones ocupan una
+columna que acompaña al desplazamiento; en móvil la acción de la intervención queda
+fija al pie, al alcance del pulgar, y no hay ninguna tabla.
+
+**El flujo de la intervención no es el estado del ticket.** Son seis pasos
+—confirmar asistencia, salir, llegué, iniciar, finalizar, cerrar— y cuál está
+disponible se deriva de lo completado con `nextWorkflowStep`, en el contrato
+compartido. El origen de datos rechaza cualquier otro: la interfaz ofrece uno solo,
+pero quien guarda no confía en eso.
+
+Operar exige `tickets.edit`. Quien solo consulta ve el ticket y no las acciones.
+
+## Origen de datos de Tickets
+
+Tickets sigue **sin módulo en el backend**. Mientras eso llegue, la frontera está
+declarada en el frontend:
+
+```
+pantalla -> hook -> TicketRepository -> mockTicketProvider -> origen en memoria
+```
+
+`ticket-repository.ts` es el único sitio donde se decide de dónde salen los tickets,
+igual que `{ provide: TicketRepository, useClass: ... }` en NestJS. Ningún componente
+consume mocks.
+
+El origen simulado guarda el estado una vez y aplica las reglas —qué estado sigue a
+qué paso, qué se audita, qué va al timeline—, así que la tabla y el detalle no pueden
+discrepar. **Vive en memoria: se pierde al recargar la página.**
+
 ## Vista adaptativa
 
 `useViewMode()` decide cómo se representa un módulo y devuelve `mode` y `reason`.
@@ -128,8 +172,10 @@ shared/
     table/    TableProvider, DataTableView, DataTable, AdvancedTable,
               ColumnSettingsPanel, ViewsBar, FilterBuilder, GroupingSelector,
               RowActions y componentes internos
-    ui/       Button, Badge, Card, Input, Label, Select, Dialog,
-              DropdownMenu, Checkbox, Alert, Spinner, DateTime
+    layout/   ... y DetailSection (sección con nombre de una ficha)
+    ui/       Button, Badge, Card, Input, Textarea, Label, Select, Dialog,
+              DropdownMenu, Checkbox, Alert, Spinner, DateTime,
+              DetailField y DetailFieldList
   hooks/        useIsMobile, useViewMode, useAuthorization
   hooks/table/  useDataTable, useTablePreferences, useTableContext,
                 useTableColumnSettings, useTableViews, useTableGrouping,
@@ -143,10 +189,17 @@ shared/
 
 # 3. Qué falta
 
-## Del Release 0.6
+## Del Release 0.7
 
-Nada. El MVP 11 se cerró en el Sprint 0.6.1: toda fecha visible pasa por el
-componente compartido.
+Nada de su alcance. Lo que quedó declarado y sin implementar a propósito:
+
+- **GPS y adjuntos del timeline.** `TicketEvent` lleva `location` y `attachments`
+  y hoy llegan siempre vacíos. El MVP 5 pedía preparar la estructura, no
+  implementarlos.
+- **`tickets.create` y `tickets.delete`** siguen en el catálogo sin que ninguna
+  acción los use. Crear y eliminar tickets depende de quién sea la fuente de verdad,
+  que es una decisión del próximo release.
+- **Módulo Tickets en el backend.** Es lo primero de la integración con Baserow.
 
 ## Módulos declarados sin construir
 
@@ -157,7 +210,6 @@ acceso desde Seguridad, y el menú no los dibuja hasta que existan.
 ## Del MVP original de la plataforma
 
 - Integración con Baserow (siguiente release)
-- Pantalla de detalle de un Ticket
 - Dashboard con gráficas (ECharts está instalado y sin usar)
 - Google Maps (la librería no está instalada)
 - Módulo de Configuración (tabla `settings` vacía)
@@ -187,7 +239,11 @@ existen pero cero código las usa.
 por pruebas, incluidas las reglas de acceso, pero no se ha comprobado en pantalla.
 
 **La vista de tarjetas de Tickets tampoco.** Exige entrar con la cuenta del
-técnico.
+técnico. El espacio de trabajo del ticket sí se comprobó al cerrar el Release 0.7.
+
+**El estado de las acciones del ticket vive en memoria.** Asignar un técnico o
+avanzar el flujo se pierde al recargar. Es lo esperado mientras el origen sea
+simulado, pero conviene saberlo antes de probar.
 
 ## Contradicciones pendientes de decisión
 
@@ -209,13 +265,19 @@ nombre.
 
 Recomendación por orden:
 
-1. **Comprobar la pantalla de Seguridad en el navegador**, con las tres cuentas:
+1. **Comprobar el CI en GitHub Actions.** Es lo más barato y lo que más información
+   da, y ahora hay algo que comprobar: `main` acaba de recibir tres releases.
+2. **Comprobar la pantalla de Seguridad en el navegador**, con las tres cuentas:
    que el supervisor no vea Seguridad ni entre por URL, y que el administrador
    aparezca como acceso total y no editable.
-2. **Comprobar el CI en GitHub Actions.** Es lo más barato y lo que más
-   información da.
-3. **Resolver las contradicciones** que quedan en la sección 4.
-4. **Empezar el Release 0.7**: integración con Baserow. Ver [NEXT.md](NEXT.md).
+3. **Decidir las seis preguntas del Release 0.8** antes de escribir código. Están en
+   [NEXT.md](NEXT.md) y todas cambian el diseño: quién es la fuente de verdad de los
+   tickets, dónde viven el timeline y la auditoría, quién los crea, cómo se
+   relacionan con clientes y sucursales, qué pasa si Baserow no responde y cómo
+   pagina.
+4. **Empezar el Release 0.8**: módulo Tickets en NestJS e integración con Baserow.
+   Ver [NEXT.md](NEXT.md).
+5. **Resolver las contradicciones** que quedan en la sección 4. Ninguna bloquea.
 
 ---
 

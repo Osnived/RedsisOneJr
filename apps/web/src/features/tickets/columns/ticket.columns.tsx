@@ -1,12 +1,6 @@
-import {
-  TICKET_PRIORITY_LABELS,
-  TICKET_STATUS_LABELS,
-  type Ticket,
-  type TicketPriority,
-  type TicketStatus,
-} from '@redsis/contracts';
-import { Badge, type BadgeVariant } from '@/shared/components/ui/badge';
+import { TICKET_PRIORITY_LABELS, TICKET_STATUS_LABELS, type Ticket } from '@redsis/contracts';
 import { defineColumns } from '@/shared/lib/table/registry';
+import { TicketPriorityBadge, TicketStatusBadge } from '../ticket-badges';
 
 /**
  * Columnas del módulo de Tickets.
@@ -19,27 +13,6 @@ import { defineColumns } from '@/shared/lib/table/registry';
  * propio render. Mantener el render junto a la definición es lo que permite que
  * un módulo nuevo solo necesite este archivo.
  */
-
-/**
- * Color de cada estado. Vive en el módulo y no en el componente Badge porque el
- * significado de un estado es conocimiento del dominio, no de la interfaz.
- */
-const STATUS_VARIANT: Record<TicketStatus, BadgeVariant> = {
-  nuevo: 'info',
-  asignado: 'info',
-  'en-ruta': 'warning',
-  'en-sitio': 'warning',
-  pendiente: 'neutral',
-  resuelto: 'success',
-  cancelado: 'danger',
-};
-
-const PRIORITY_VARIANT: Record<TicketPriority, BadgeVariant> = {
-  baja: 'neutral',
-  media: 'info',
-  alta: 'warning',
-  critica: 'danger',
-};
 
 /**
  * Traduce un código a su etiqueta cuando se agrupa.
@@ -93,9 +66,7 @@ export const ticketColumns = defineColumns<Ticket>([
     // El grupo debe leerse "En ruta", no "en-ruta": traducir el código es
     // conocimiento del dominio y por eso vive aquí.
     groupLabel: (value) => labelOf(TICKET_STATUS_LABELS, value),
-    cell: (ticket) => (
-      <Badge variant={STATUS_VARIANT[ticket.status]}>{TICKET_STATUS_LABELS[ticket.status]}</Badge>
-    ),
+    cell: (ticket) => <TicketStatusBadge status={ticket.status} />,
   },
   {
     id: 'priority',
@@ -105,11 +76,7 @@ export const ticketColumns = defineColumns<Ticket>([
     align: 'center',
     groupable: true,
     groupLabel: (value) => labelOf(TICKET_PRIORITY_LABELS, value),
-    cell: (ticket) => (
-      <Badge variant={PRIORITY_VARIANT[ticket.priority]}>
-        {TICKET_PRIORITY_LABELS[ticket.priority]}
-      </Badge>
-    ),
+    cell: (ticket) => <TicketPriorityBadge priority={ticket.priority} />,
   },
   {
     id: 'technicianName',

@@ -313,6 +313,42 @@ compilación que no se reconstruye al cambiar el código, ocupa el puerto 3000 e
 impide que arranque el watcher de `pnpm dev`. Un backend desactualizado servido
 así fue la causa de un 403 general que parecía un fallo de permisos.
 
+## Cuando la aplicación parece romperse al arrancar
+
+Dos causas de entorno explican casi todos los fallos al levantar el proyecto, y
+ninguna está en el código. Conviene descartarlas antes de buscar en otro sitio.
+
+**PostgreSQL apagado.** Si Docker Desktop no está arrancado no hay base de datos, y
+la aplicación falla en cuanto pide cualquier dato. Se comprueba en un segundo:
+
+```bash
+curl http://localhost:3000/api/health
+```
+
+Un `"database":"down"` significa que falta `docker compose -f docker-compose.dev.yml up -d`,
+no que haya un fallo de la API: por eso el healthcheck existe.
+
+**Dos `pnpm dev` a la vez.** Es el fallo más engañoso. El segundo no avisa: Vite ve
+el 5173 ocupado y se muda al 5174 o al 5175, así que el navegador abierto en el 5173
+sigue sirviendo el código de la sesión anterior; y los dos vigilantes de contratos
+escriben el mismo `dist`, lo que dispara recargas en cadena. Parece que la
+aplicación se rompió sola.
+
+Cerrar `pnpm dev` con Ctrl+C no siempre basta: si se mata el proceso padre, los
+hijos —`tsc --watch`, `vite`, `nest start`, `node dist/main`— quedan huérfanos y
+siguen ocupando los puertos. Para comprobar qué hay vivo y limpiarlo:
+
+```powershell
+Get-NetTCPConnection -State Listen -LocalPort 3000,5173,5174,5175 | Select-Object LocalPort,OwningProcess
+```
+
+```powershell
+Get-CimInstance Win32_Process -Filter "Name='node.exe'" | Where-Object { $_.CommandLine -match 'RedsisOneJr' -and $_.CommandLine -match '(tsc|nest\.js|vite\.js|dist\\main|turbo)' } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force }
+```
+
+La regla es una sola: **un único `pnpm dev`, y Vite tiene que decir 5173**. Si dice
+otro puerto, hay algo anterior sin cerrar.
+
 ## Nota sobre la verificación en navegador
 
 El panel de navegador integrado no compone frames, así que no hay capturas de

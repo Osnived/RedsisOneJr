@@ -315,7 +315,7 @@ así fue la causa de un 403 general que parecía un fallo de permisos.
 
 ## Cuando la aplicación parece romperse al arrancar
 
-Dos causas de entorno explican casi todos los fallos al levantar el proyecto, y
+Tres causas de entorno explican casi todos los fallos al levantar el proyecto, y
 ninguna está en el código. Conviene descartarlas antes de buscar en otro sitio.
 
 **PostgreSQL apagado.** Si Docker Desktop no está arrancado no hay base de datos, y
@@ -327,6 +327,29 @@ curl http://localhost:3000/api/health
 
 Un `"database":"down"` significa que falta `docker compose -f docker-compose.dev.yml up -d`,
 no que haya un fallo de la API: por eso el healthcheck existe.
+
+**El contenedor arriba pero sin publicar el puerto.** Este es el que despista de
+verdad, porque `docker ps` dice `Up (healthy)` y `docker compose up -d` responde que
+ya está corriendo, así que parece que la base de datos no es el problema. Pasa cuando
+Docker Desktop reinicia el contenedor por su cuenta —lo tiene declarado con
+`restart: unless-stopped`— y su proxy de puertos no llega a enlazar el 5432.
+
+Se distingue mirando la columna de puertos: tiene que decir
+`0.0.0.0:5432->5432/tcp`, no `5432/tcp` a secas.
+
+```bash
+docker ps --format "{{.Names}} | {{.Status}} | {{.Ports}}"
+```
+
+Se arregla recreando el contenedor. El volumen con los datos no se toca, así que no
+hay que volver a migrar ni a sembrar:
+
+```bash
+docker compose -f docker-compose.dev.yml up -d --force-recreate
+```
+
+No hace falta reiniciar la API: el pool de conexiones abre la siguiente por su
+cuenta, y el healthcheck vuelve a `"database":"up"` en cuanto el puerto responde.
 
 **Dos `pnpm dev` a la vez.** Es el fallo más engañoso. El segundo no avisa: Vite ve
 el 5173 ocupado y se muda al 5174 o al 5175, así que el navegador abierto en el 5173

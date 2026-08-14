@@ -40,6 +40,9 @@ Se deja constancia para que nadie vuelva a registrarlo como pendiente:
   frontend, así que el error del esqueleto de carga desapareció con él.
 - **`token.service.spec.ts` compilaba contra un contrato viejo.** Un `dist`
   desfasado ocultaba que construía un `JwtPayload` sin `modules`.
+- **`.gitignore` no se versionaba.** Se versiona desde el 14/08/2026, por decisión
+  del propietario. Quien clone el repositorio recibe las reglas de ignorado, así
+  que ya no puede commitear `node_modules`, `dist` ni un `.env` por descuido.
 
 ---
 
@@ -366,12 +369,8 @@ actúa. Nunca se confirmó formalmente.
 El archivo se llama `STACK.md`, su título interno es `TECH_STACK.md` y varios
 documentos lo citan con el segundo nombre. Renombrar o corregir las citas.
 
-## `.gitignore` no se versiona
-
-**Impacto: medio.**
-
-Por decisión del propietario. Quien clone el repositorio no tendrá reglas de
-ignorado y puede commitear `node_modules` o `dist` sin darse cuenta.
+_(La contradicción del `.gitignore` sin versionar se resolvió el 14/08/2026: ahora
+se versiona. Ver la sección 0.)_
 
 ---
 

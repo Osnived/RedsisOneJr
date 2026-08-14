@@ -323,8 +323,6 @@ especificación porque un nodo estático no puede saber sobre qué fila actúa.
 **`TECH_STACK.md` se llama `STACK.md`.** Los documentos lo citan con el otro
 nombre.
 
-**`.gitignore` no se versiona**, por decisión del propietario.
-
 ---
 
 # 5. Próximas acciones

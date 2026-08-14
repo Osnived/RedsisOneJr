@@ -77,6 +77,9 @@ conozca ninguno, y las conexiones se administran desde la propia aplicación.
 
 - `token.service.spec.ts` construía un `JwtPayload` sin `modules`, obligatorio
   desde el Release 0.6. Estaba oculto por un `dist` de contratos desfasado.
+- **`.gitignore` pasa a versionarse.** Quien clone el repositorio recibe las reglas
+  de ignorado; antes podía commitear `node_modules`, `dist` o un `.env` sin
+  notarlo. Era una de las contradicciones abiertas del proyecto.
 
 ### Notas
 

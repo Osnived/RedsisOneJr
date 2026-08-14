@@ -6,7 +6,7 @@ import { AdvancedTable, DataTable } from '@/shared/components/table';
 import { createAuthorizationService } from '@/shared/lib/authorization';
 import { TABLE_IDS } from '@/shared/lib/table/registry';
 import { getTicketRowId, ticketColumns } from '@/features/tickets/columns/ticket.columns';
-import { MOCK_TICKETS } from '@/features/tickets/mocks/tickets.mock';
+import { MOCK_TICKETS } from '@/test/ticket-fixtures';
 import { useAuthStore } from '@/stores/auth.store';
 
 const TOKENS: AuthTokens = { accessToken: 'a', refreshToken: 'r', expiresIn: 900 };

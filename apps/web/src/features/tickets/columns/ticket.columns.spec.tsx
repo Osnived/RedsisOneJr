@@ -1,20 +1,28 @@
 import { describe, expect, it } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import { TICKET_PRIORITIES, TICKET_STATUSES, type Ticket } from '@redsis/contracts';
+import {
+  STANDARD_TICKET_COLUMNS,
+  TICKET_PRIORITIES,
+  TICKET_STATUSES,
+  type Ticket,
+} from '@redsis/contracts';
 import { getTicketRowId, ticketColumns } from './ticket.columns';
 
 function buildTicket(overrides: Partial<Ticket> = {}): Ticket {
   return {
     id: 'ticket-1',
     number: 'INC-2026-000145',
+    title: 'Equipo fuera de servicio',
     clientName: 'Banco Central',
     branchName: 'Sucursal Norte',
     city: 'Bogotá',
+    zoneName: 'Zona Centro',
     status: TICKET_STATUSES.NEW,
     priority: TICKET_PRIORITIES.HIGH,
     technicianName: 'Ana Pérez',
     createdAt: '2026-07-01T10:00:00.000Z',
     updatedAt: '2026-07-15T18:30:00.000Z',
+    metadata: {},
     ...overrides,
   };
 }
@@ -31,15 +39,18 @@ function renderCell(columnId: string, ticket: Ticket) {
 }
 
 describe('ticketColumns', () => {
-  it('cubre las columnas pedidas por el negocio', () => {
+  it('cubre las columnas pedidas por el negocio, en el orden del catálogo', () => {
+    // El orden lo declara el catálogo compartido y no este archivo: es lo que
+    // permite que un proyecto lo cambie sin desplegar.
     expect(ticketColumns.map((column) => column.id)).toEqual([
       'number',
-      'clientName',
-      'branchName',
-      'city',
       'status',
       'priority',
+      'clientName',
+      'branchName',
+      'zoneName',
       'technicianName',
+      'city',
       'createdAt',
       'updatedAt',
     ]);
@@ -113,5 +124,27 @@ describe('ticketColumns', () => {
 describe('getTicketRowId', () => {
   it('usa el identificador del ticket', () => {
     expect(getTicketRowId(buildTicket({ id: 'ticket-9' }))).toBe('ticket-9');
+  });
+});
+
+describe('correspondencia con el catálogo de columnas estándar', () => {
+  it('toda columna dibujada existe en el catálogo compartido', () => {
+    // Los identificadores son la clave con la que se guardan la visibilidad, el
+    // ancho y las vistas de cada usuario en su navegador. Si el catálogo y las
+    // columnas del módulo divergen, una vista guardada apunta a algo que ya no
+    // existe y el usuario la ve rota sin saber por qué.
+    const catalogIds = new Set(STANDARD_TICKET_COLUMNS.map((column) => column.id));
+
+    for (const column of ticketColumns) {
+      expect(catalogIds).toContain(column.id);
+    }
+  });
+
+  it('lo que el catálogo declara obligatorio no se puede ocultar', () => {
+    for (const required of STANDARD_TICKET_COLUMNS.filter((column) => column.isRequired)) {
+      const drawn = ticketColumns.find((column) => column.id === required.id);
+
+      expect(drawn?.hideable).toBe(false);
+    }
   });
 });

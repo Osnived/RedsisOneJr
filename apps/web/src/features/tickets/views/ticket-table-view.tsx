@@ -1,6 +1,6 @@
 import { AdvancedTable } from '@/shared/components/table';
 import { TABLE_IDS } from '@/shared/lib/table/registry';
-import { getTicketRowId, ticketColumns } from '../columns/ticket.columns';
+import { getTicketRowId } from '../columns/ticket.columns';
 import type { TicketViewProps } from './ticket-view.types';
 
 /**
@@ -14,22 +14,33 @@ import type { TicketViewProps } from './ticket-view.types';
  * pantalla y ahí ocurre toda la operación. Por eso no declara acciones de fila,
  * aunque el framework las siga soportando para los módulos administrativos.
  *
- * No consulta datos: los recibe. Eso es lo que permite que convivir con las
- * tarjetas no duplique ni una petición.
+ * Opera en **modo servidor**: buscar, ordenar, filtrar y paginar los resuelve el
+ * origen, no el navegador. Es lo que permite que la tabla sirva para un tablero de
+ * cien mil tickets sin traérselos todos.
+ *
+ * No consulta datos ni conoce sus columnas: las recibe. Eso permite que convivir
+ * con las tarjetas no duplique ni una petición, y que un proyecto con otra
+ * estructura use esta misma vista sin tocarla.
  */
 export function TicketTableView({
   tickets,
+  columns,
+  totalRows,
   loading,
   error,
+  onQueryChange,
   onViewDetail,
   onSelectionChange,
 }: TicketViewProps): React.JSX.Element {
   return (
     <AdvancedTable
       tableId={TABLE_IDS.TICKETS}
-      columns={ticketColumns}
+      columns={columns}
       data={tickets}
       getRowId={getTicketRowId}
+      mode="server"
+      totalRows={totalRows}
+      onQueryChange={onQueryChange}
       loading={loading}
       error={error}
       enableRowSelection

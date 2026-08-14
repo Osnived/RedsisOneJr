@@ -1,0 +1,648 @@
+# Documentación de referencia de la API de RedsisOne / OneBoards.
+#
+# Este archivo es una exportación de Bruno y sirve para diseñar el Provider de
+# RedsisOne sin inventar endpoints ni formas de autenticación.
+#
+# NO CONTIENE CREDENCIALES. El token de ejemplo se sustituyó por un marcador:
+# la exportación original traía uno real repetido quince veces.
+#
+# Las credenciales de un proveedor viven cifradas en la base de datos y se
+# administran desde Configuración; nunca en un archivo del repositorio, nunca en
+# el frontend (ver AGENTS.md y STACK.md). Al reexportar desde Bruno hay que volver
+# a sustituir el token antes de guardar.
+openapi: 3.0.0
+info:
+  title: RedsisOne-EndPoints
+  version: 1.0.0
+paths:
+  /api/v1/items/cc40a964-7d58-4b8d-9845-e16226049bd0/values:
+    get:
+      summary: CellValue
+      operationId: >-
+        c_users_ocandanoza_onedrive_-_redes_y_sistemas_integrados_s_a_s_documentos_bruno_redsisone_cellvalue_yml
+      description: ''
+      tags:
+        - ''
+      responses:
+        '200':
+          description: ''
+      parameters:
+        - name: Authorization
+          in: header
+          description: ''
+          required: true
+          schema:
+            type: string
+          example: >-
+            Bearer
+            rsk_TOKEN_DE_EJEMPLO_SUSTITUIR_POR_EL_REAL
+      servers:
+        - url: https://one.redsis.app
+      x-bruno-variants:
+        - summary: copy
+          operationId: >-
+            c_users_ocandanoza_onedrive_-_redes_y_sistemas_integrados_s_a_s_documentos_bruno_redsisone_copy_yml
+          description: ''
+          tags:
+            - ''
+          responses:
+            '200':
+              description: ''
+          parameters:
+            - name: Authorization
+              in: header
+              description: ''
+              required: true
+              schema:
+                type: string
+              example: >-
+                Bearer
+                rsk_TOKEN_DE_EJEMPLO_SUSTITUIR_POR_EL_REAL
+          servers:
+            - url: https://one.redsis.app
+  /api/v1/boards/%7B%7BShortdBoard%7D%7D/items:
+    post:
+      summary: Create Item Portal Tickets
+      operationId: >-
+        c_users_ocandanoza_onedrive_-_redes_y_sistemas_integrados_s_a_s_documentos_bruno_redsisone_create_item_portal_tickets_yml
+      description: ''
+      tags:
+        - ''
+      responses:
+        '200':
+          description: ''
+      parameters:
+        - name: Authorization
+          in: header
+          description: ''
+          required: true
+          schema:
+            type: string
+          example: >-
+            Bearer
+            rsk_TOKEN_DE_EJEMPLO_SUSTITUIR_POR_EL_REAL
+      requestBody:
+        $ref: '#/components/requestBodies/create_item_portal_tickets'
+      servers:
+        - url: https://one.redsis.app
+      x-bruno-variants:
+        - summary: Insert body Item
+          operationId: >-
+            c_users_ocandanoza_onedrive_-_redes_y_sistemas_integrados_s_a_s_documentos_bruno_redsisone_insert_body_item_yml
+          description: ''
+          tags:
+            - ''
+          responses:
+            '200':
+              description: ''
+          parameters:
+            - name: Authorization
+              in: header
+              description: ''
+              required: true
+              schema:
+                type: string
+              example: >-
+                Bearer
+                rsk_TOKEN_DE_EJEMPLO_SUSTITUIR_POR_EL_REAL
+          requestBody:
+            $ref: '#/components/requestBodies/insert_body_item'
+          servers:
+            - url: https://one.redsis.app
+        - summary: Insert Item By Board ID SubItem
+          operationId: >-
+            c_users_ocandanoza_onedrive_-_redes_y_sistemas_integrados_s_a_s_documentos_bruno_redsisone_insert_item_by_board_id_subitem_yml
+          description: ''
+          tags:
+            - ''
+          responses:
+            '200':
+              description: ''
+          parameters:
+            - name: Authorization
+              in: header
+              description: ''
+              required: true
+              schema:
+                type: string
+              example: >-
+                Bearer
+                rsk_TOKEN_DE_EJEMPLO_SUSTITUIR_POR_EL_REAL
+          requestBody:
+            $ref: '#/components/requestBodies/insert_item_by_board_id_subitem'
+          servers:
+            - url: https://one.redsis.app
+  /api/v1/boards/%7B%7BBoard_id%7D%7D:
+    get:
+      summary: Get Boards By ID
+      operationId: >-
+        c_users_ocandanoza_onedrive_-_redes_y_sistemas_integrados_s_a_s_documentos_bruno_redsisone_get_boards_by_id_yml
+      description: ''
+      tags:
+        - ''
+      responses:
+        '200':
+          description: ''
+      parameters:
+        - name: Authorization
+          in: header
+          description: ''
+          required: true
+          schema:
+            type: string
+          example: >-
+            Bearer
+            rsk_TOKEN_DE_EJEMPLO_SUSTITUIR_POR_EL_REAL
+      servers:
+        - url: https://one.redsis.app
+  /api/v1/items/30b4f7d2-4f1d-49cf-b698-61a9e2a8c12a:
+    get:
+      summary: Get Item By ID
+      operationId: >-
+        c_users_ocandanoza_onedrive_-_redes_y_sistemas_integrados_s_a_s_documentos_bruno_redsisone_get_item_by_id_yml
+      description: ''
+      tags:
+        - ''
+      responses:
+        '200':
+          description: ''
+      parameters:
+        - name: Authorization
+          in: header
+          description: ''
+          required: true
+          schema:
+            type: string
+          example: >-
+            Bearer
+            rsk_TOKEN_DE_EJEMPLO_SUSTITUIR_POR_EL_REAL
+      servers:
+        - url: https://one.redsis.app
+  /api/v1/boards/BRD-GVF3CC/items:
+    get:
+      summary: Info Colunm x Item
+      operationId: >-
+        c_users_ocandanoza_onedrive_-_redes_y_sistemas_integrados_s_a_s_documentos_bruno_redsisone_info_colunm_x_item_yml
+      description: ''
+      tags:
+        - ''
+      responses:
+        '200':
+          description: ''
+      parameters:
+        - name: view
+          in: query
+          description: ''
+          required: true
+          schema:
+            type: string
+          example: tree|flat
+        - name: include
+          in: query
+          description: ''
+          required: true
+          schema:
+            type: string
+          example: values
+        - name: Authorization
+          in: header
+          description: ''
+          required: true
+          schema:
+            type: string
+          example: >-
+            Bearer
+            rsk_TOKEN_DE_EJEMPLO_SUSTITUIR_POR_EL_REAL
+      servers:
+        - url: https://one.redsis.app
+    post:
+      summary: Insert Item By Board ID
+      operationId: >-
+        c_users_ocandanoza_onedrive_-_redes_y_sistemas_integrados_s_a_s_documentos_bruno_redsisone_insert_item_by_board_id_yml
+      description: ''
+      tags:
+        - ''
+      responses:
+        '200':
+          description: ''
+      parameters:
+        - name: Authorization
+          in: header
+          description: ''
+          required: true
+          schema:
+            type: string
+          example: >-
+            Bearer
+            rsk_TOKEN_DE_EJEMPLO_SUSTITUIR_POR_EL_REAL
+      requestBody:
+        $ref: '#/components/requestBodies/insert_item_by_board_id'
+      servers:
+        - url: https://one.redsis.app
+  /api/v1/boards/BRD-XQ09BP/items:
+    post:
+      summary: Insert subitem
+      operationId: >-
+        c_users_ocandanoza_onedrive_-_redes_y_sistemas_integrados_s_a_s_documentos_bruno_redsisone_insert_subitem_yml
+      description: ''
+      tags:
+        - ''
+      responses:
+        '200':
+          description: ''
+      parameters:
+        - name: Authorization
+          in: header
+          description: ''
+          required: true
+          schema:
+            type: string
+          example: >-
+            Bearer
+            rsk_TOKEN_DE_EJEMPLO_SUSTITUIR_POR_EL_REAL
+      requestBody:
+        $ref: '#/components/requestBodies/insert_subitem'
+      servers:
+        - url: https://one.redsis.app
+  /api/v1/boards/BRD-DW98E5/items:
+    post:
+      summary: Insert Tickets Inbox
+      operationId: >-
+        c_users_ocandanoza_onedrive_-_redes_y_sistemas_integrados_s_a_s_documentos_bruno_redsisone_insert_tickets_inbox_yml
+      description: ''
+      tags:
+        - ''
+      responses:
+        '200':
+          description: ''
+      parameters:
+        - name: Authorization
+          in: header
+          description: ''
+          required: true
+          schema:
+            type: string
+          example: >-
+            Bearer
+            rsk_TOKEN_DE_EJEMPLO_SUSTITUIR_POR_EL_REAL
+      requestBody:
+        $ref: '#/components/requestBodies/insert_tickets_inbox'
+      servers:
+        - url: https://one.redsis.app
+  /api/v1:
+    get:
+      summary: Query´s RedsisOne
+      operationId: >-
+        c_users_ocandanoza_onedrive_-_redes_y_sistemas_integrados_s_a_s_documentos_bruno_redsisone_query_s_redsisone_yml
+      description: ''
+      tags:
+        - ''
+      responses:
+        '200':
+          description: ''
+      parameters:
+        - name: Authorization
+          in: header
+          description: ''
+          required: true
+          schema:
+            type: string
+          example: >-
+            Bearer
+            rsk_TOKEN_DE_EJEMPLO_SUSTITUIR_POR_EL_REAL
+      servers:
+        - url: https://one.redsis.app
+  /api/v1/boards/BRD-S6GJTB/schema:
+    get:
+      summary: Schema Board by ID
+      operationId: >-
+        c_users_ocandanoza_onedrive_-_redes_y_sistemas_integrados_s_a_s_documentos_bruno_redsisone_schema_board_by_id_yml
+      description: ''
+      tags:
+        - ''
+      responses:
+        '200':
+          description: ''
+      parameters:
+        - name: Authorization
+          in: header
+          description: ''
+          required: true
+          schema:
+            type: string
+          example: >-
+            Bearer
+            rsk_TOKEN_DE_EJEMPLO_SUSTITUIR_POR_EL_REAL
+      servers:
+        - url: https://one.redsis.app
+  /api/now/table/incident/068218b34752c3909cf582b8036d43b0:
+    get:
+      summary: ServiceNow copy
+      operationId: >-
+        c_users_ocandanoza_onedrive_-_redes_y_sistemas_integrados_s_a_s_documentos_bruno_redsisone_servicenow_copy_yml
+      description: ''
+      tags:
+        - ''
+      responses:
+        '200':
+          description: ''
+      parameters:
+        - name: sysparm_query
+          in: query
+          description: ''
+          required: false
+          schema:
+            type: string
+          example: assignment_group=a5f2c9c33bb73650d8884147f4e45a95
+        - name: Accept
+          in: header
+          description: ''
+          required: true
+          schema:
+            type: string
+          example: application/json
+      security:
+        - servicenow_copy: []
+      servers:
+        - url: https://kyndrylmx.service-now.com
+  /api/v1/items/645f81f2-d3bf-46d2-adfd-eb9626126e4f:
+    get:
+      summary: ServiceNow
+      operationId: >-
+        c_users_ocandanoza_onedrive_-_redes_y_sistemas_integrados_s_a_s_documentos_bruno_redsisone_servicenow_yml
+      description: ''
+      tags:
+        - ''
+      responses:
+        '200':
+          description: ''
+      parameters:
+        - name: Authorization
+          in: header
+          description: ''
+          required: true
+          schema:
+            type: string
+          example: >-
+            Bearer
+            rsk_TOKEN_DE_EJEMPLO_SUSTITUIR_POR_EL_REAL
+      servers:
+        - url: https://one.redsis.app
+  /api/v1/boards/5b9acedc-1085-4d35-ae99-b2c77026ab76/items:
+    get:
+      summary: Untitled 1
+      operationId: >-
+        c_users_ocandanoza_onedrive_-_redes_y_sistemas_integrados_s_a_s_documentos_bruno_redsisone_untitled_1_yml
+      description: ''
+      tags:
+        - ''
+      responses:
+        '200':
+          description: ''
+      parameters:
+        - name: Authorization
+          in: header
+          description: ''
+          required: true
+          schema:
+            type: string
+          example: >-
+            Bearer
+            rsk_TOKEN_DE_EJEMPLO_SUSTITUIR_POR_EL_REAL
+      servers:
+        - url: https://one.redsis.app
+servers: []
+components:
+  schemas:
+    create_item_portal_tickets:
+      type: object
+      properties:
+        groupId:
+          type: string
+        title:
+          type: string
+        values:
+          type: array
+          items:
+            type: object
+            properties:
+              columnId:
+                type: string
+              value:
+                type: string
+      example:
+        groupId: '{{Group_Id}}'
+        title: Esto es una prueba {{Contador}}
+        values:
+          - columnId: '{{Descripcion}}'
+            value: Esto es una prueba
+          - columnId: 18de67e0-b0a9-4be5-90c9-b23729fed107
+            value: Cancelled
+          - columnId: 170f93c2-6eee-4c62-853c-a1cc8f90a1fb
+            value: '2026-07-01T07:00:00Z'
+    insert_body_item:
+      type: object
+      properties:
+        groupId:
+          type: string
+        title:
+          type: string
+        values:
+          type: array
+          items:
+            type: object
+            properties:
+              columnId:
+                type: string
+              value:
+                type: integer
+      example:
+        groupId: '{{Group_Id}}'
+        title: Esto es una prueba {{Contador}}
+        values:
+          - columnId: '{{Location}}'
+            value: 25
+          - columnId: '{{Descripcion}}'
+            value: Esto es una prueba
+    insert_item_by_board_id_subitem:
+      type: object
+      properties:
+        groupId:
+          type: string
+        title:
+          type: string
+        values:
+          type: array
+          items:
+            type: object
+            properties:
+              columnId:
+                type: string
+              value:
+                type: string
+      example:
+        groupId: '{{Group_Id}}'
+        title: INC
+        values:
+          - columnId: 94849b40-2da1-49ba-94bf-e286abdc7155
+            value: New
+          - columnId: 2e979261-ebb6-4c5b-8a01-b89a0b001f69
+            value: Descrip. Corta
+          - columnId: 0d09fd0d-47ab-4a06-8b52-bba5ca8ab663
+            value: Descripcion
+          - columnId: ddea37ad-6dee-42af-b53a-b9e7f9090b5c
+            value: Urgency
+          - columnId: 8e8ce95e-b034-4231-bd7e-e542ef52f719
+            value: Priority
+          - columnId: 0c4898f8-287d-4c83-8df8-cec49a0e8bc5
+            value: 222
+          - columnId: 82c68df4-3ba0-439f-9700-137ff92bac8a
+            value: Category
+          - columnId: 83592973-b960-4624-acec-0a8a17c8193e
+            value: Subcategory
+          - columnId: ffb45037-ee59-4738-ab1e-80d9ec180da9
+            value: Subcategory3
+          - columnId: 2493d64f-abc8-45a1-b7f3-4ce350dae573
+            value: Subcategory4
+    insert_item_by_board_id:
+      type: object
+      properties:
+        groupId:
+          type: string
+        title:
+          type: string
+        values:
+          type: array
+          items:
+            type: object
+            properties:
+              columnId:
+                type: string
+              value:
+                type: string
+      example:
+        groupId: d920ad75-8da6-45ef-8615-6d3e97499f81
+        title: INC2904642
+        values:
+          - columnId: 3826159b-ca77-43e8-a9f4-3d059c65ca85
+            value: '2026-07-24T00:17:13.000Z'
+          - columnId: ef75ca5e-0c99-4e64-899f-630c9d15ae40
+            value: new
+          - columnId: 5d73048d-3dcf-4b8b-801e-0058c207331b
+            value: Panaderia, linea blanca en la impresion
+          - columnId: c8b2fab8-0381-461a-99ee-8e9018ac230f
+            value: >-
+              Datos de contacto: ALIGHIERI RAMIREZ Tel: 5510999597 Horario: 8-16
+              Ubicación del equipo (# caja): panaderia Falla del equipo:
+              Panaderia, linea blanca en la impresion Modelo del CPU donde está
+              conectado: Marca del CPU donde está conectado: Serie del CPU donde
+              está conectado: Equipo roto o sin partes: NO Parte rota: -
+          - columnId: 520b9a48-91cc-404d-b143-8ea4ca48cd0e
+            value: '154'
+          - columnId: 70b39ac1-af16-4472-98a9-edbd0c1b9562
+            value: B239369115
+          - columnId: 836a34b1-f7bd-46e2-ba76-6b8c9935ea83
+            value: METTLER TOLEDO
+          - columnId: e99e2275-45c2-4221-8197-3938218a032f
+            value: BPRO
+    insert_subitem:
+      type: object
+      properties:
+        boardId:
+          type: string
+        parentId:
+          type: string
+        title:
+          type: string
+      example:
+        boardId: 8e17852d-0ff4-4a3b-b6fa-68a2a90fd96a
+        parentId: 29092288-d6b8-435d-b4b7-ccb25f97477b
+        title: Esto es una prueba
+    insert_tickets_inbox:
+      type: object
+      properties:
+        groupId:
+          type: string
+        title:
+          type: string
+        values:
+          type: array
+          items:
+            type: object
+            properties:
+              columnId:
+                type: string
+              value:
+                type: string
+      example:
+        groupId: d920ad75-8da6-45ef-8615-6d3e97499f81
+        title: INC2904642
+        values:
+          - columnId: 3826159b-ca77-43e8-a9f4-3d059c65ca85
+            value: '2026-07-24T00:17:13.000Z'
+          - columnId: 03c40d43-076a-4a60-aeb6-170ed0815401
+            value: new
+          - columnId: 5d73048d-3dcf-4b8b-801e-0058c207331b
+            value: Panaderia, linea blanca en la impresion
+          - columnId: c8b2fab8-0381-461a-99ee-8e9018ac230f
+            value: >-
+              Datos de contacto: ALIGHIERI RAMIREZ Tel: 5510999597 Horario: 8-16
+              Ubicación del equipo (# caja): panaderia Falla del equipo:
+              Panaderia, linea blanca en la impresion Modelo del CPU donde está
+              conectado: Marca del CPU donde está conectado: Serie del CPU donde
+              está conectado: Equipo roto o sin partes: NO Parte rota: -
+          - columnId: 520b9a48-91cc-404d-b143-8ea4ca48cd0e
+            value: '154'
+          - columnId: 70b39ac1-af16-4472-98a9-edbd0c1b9562
+            value: B239369115
+          - columnId: 836a34b1-f7bd-46e2-ba76-6b8c9935ea83
+            value: METTLER TOLEDO
+          - columnId: e99e2275-45c2-4221-8197-3938218a032f
+            value: BPRO
+  requestBodies:
+    create_item_portal_tickets:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/create_item_portal_tickets'
+      description: ''
+      required: true
+    insert_body_item:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/insert_body_item'
+      description: ''
+      required: true
+    insert_item_by_board_id_subitem:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/insert_item_by_board_id_subitem'
+      description: ''
+      required: true
+    insert_item_by_board_id:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/insert_item_by_board_id'
+      description: ''
+      required: true
+    insert_subitem:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/insert_subitem'
+      description: ''
+      required: true
+    insert_tickets_inbox:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/insert_tickets_inbox'
+      description: ''
+      required: true
+  securitySchemes:
+    servicenow_copy:
+      type: http
+      scheme: basic

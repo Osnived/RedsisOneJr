@@ -27,6 +27,16 @@ vi.mock('@/features/tickets/use-open-ticket', () => ({
 }));
 
 /**
+ * El origen de datos se sustituye por un doble: estas pruebas comprueban qué vista
+ * se elige, no la API.
+ */
+vi.mock('@/features/tickets/ticket-repository', async () => {
+  const { createTicketRepositoryDouble } = await import('@/test/ticket-repository-double');
+
+  return { ticketRepository: createTicketRepositoryDouble() };
+});
+
+/**
  * Se toma el componente de la propia ruta en lugar de reconstruir la página:
  * lo que se comprueba es que la pantalla real elige la vista, no una copia de
  * su lógica montada para la ocasión.

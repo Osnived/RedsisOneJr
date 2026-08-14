@@ -45,6 +45,18 @@ Prisma. Esto es lo que impide que el dominio quede atado al ORM.
 
 Cambiar de origen de datos es cambiar una línea en el módulo.
 
+### La excepción: Tickets
+
+Tickets resuelve su origen **por petición** y no al arrancar, porque cada proyecto
+puede vivir en un proveedor distinto y los proyectos se dan de alta con la
+aplicación en marcha. Quien decide es `TicketProviderRegistry`, y sigue siendo un
+solo punto de decisión: lo que cambia es cuándo se toma.
+
+Las tres reglas que lo acotan y las alternativas descartadas están en el
+[ADR 0003](adr/0003-registro-de-proveedores-de-datos.md). La más importante:
+**ninguna regla de negocio vive por debajo del Repository**, así que cambiar de
+origen no puede cambiar el comportamiento del negocio.
+
 ## Contratos compartidos
 
 `packages/contracts` contiene los tipos y esquemas Zod que comparten frontend y
@@ -251,14 +263,15 @@ en el log del servidor.
 Cada módulo es independiente y reutiliza la infraestructura común. Los que ya
 existen:
 
-| Módulo         | Responsabilidad                           |
-| -------------- | ----------------------------------------- |
-| `auth`         | Login, renovación, cierre de sesión       |
-| `users`        | Alta, consulta, edición y desactivación   |
-| `roles`        | Consulta de roles y sus permisos          |
-| `permissions`  | Catálogo de permisos, plano y agrupado    |
-| `activity-log` | Historial de actividad                    |
-| `health`       | Estado del servicio y de la base de datos |
+| Módulo         | Responsabilidad                                  |
+| -------------- | ------------------------------------------------ |
+| `auth`         | Login, renovación, cierre de sesión              |
+| `users`        | Alta, consulta, edición y desactivación          |
+| `roles`        | Consulta de roles y sus permisos                 |
+| `permissions`  | Catálogo de permisos, plano y agrupado           |
+| `tickets`      | Servicios e incidentes, con su flujo y su rastro |
+| `activity-log` | Historial de actividad                           |
+| `health`       | Estado del servicio y de la base de datos        |
 
 Para añadir un módulo:
 
@@ -271,6 +284,68 @@ Para añadir un módulo:
 
 Un módulo nunca accede a los datos de otro directamente: se comunica a través de
 los servicios que el otro módulo exporta.
+
+## Proveedores de datos de Tickets
+
+Un ticket es un registro operacional que vive fuera de la plataforma, y **cada
+proyecto puede vivir en un sitio distinto**: un cliente en un tablero de RedsisOne,
+otro en una tabla de Baserow, otro en ServiceNow.
+
+```
+React → API → TicketsService (las reglas) → TicketRepository
+                                                  │
+                              TicketProviderRegistry resuelve
+                                                  │
+              Mock (implementado) · RedsisOne · Baserow · ServiceNow · PostgreSQL
+```
+
+Tres reglas sostienen el diseño, y están razonadas en el
+[ADR 0003](adr/0003-registro-de-proveedores-de-datos.md):
+
+- **Ninguna regla de negocio vive por debajo del Repository.** El servicio decide
+  qué cambia, qué se audita y qué entra en el timeline; un Provider guarda lo que
+  recibe. Cambiar de origen no puede cambiar el comportamiento.
+- **Un proveedor declarado y sin implementar impide arrancar** si está configurado.
+- **Pedir uno sin implementar lanza**, nunca cae al simulado: servir datos de
+  prueba creyéndolos reales es peor que no servir nada.
+
+`applyMutation` viaja entera —dato, entrada del timeline y cambios auditados— y no
+en tres llamadas: un origen que guardara el dato y fallara al escribir el rastro
+dejaría un cambio sin trazabilidad.
+
+### Fuentes de datos
+
+Una fuente es un proyecto: un tablero concreto de un proveedor concreto, con su
+estructura de columnas. Se administran en `/settings` y viven en `data_sources`.
+
+Las credenciales se cifran con **AES-256-GCM** y no vuelven jamás al frontend: la
+API responde `hasCredentials` y nada más. Se usa GCM porque además autentica, así
+que una fila alterada falla al descifrar en lugar de producir datos que la
+aplicación enviaría a un servicio externo.
+
+Qué parámetros pide cada proveedor lo declara el catálogo compartido, y la pantalla
+los dibuja sin conocerlos. Por eso no existe ningún condicional por proveedor en
+React.
+
+### Columnas por proyecto
+
+```
+Provider → schema del origen → TicketColumnMapping → TicketColumnConfig → ColumnDefinition
+           (solo backend) ────────────────┘          └─── lo que viaja a React
+```
+
+`TicketColumnMapping` lleva el `providerFieldId` —el UUID de columna de RedsisOne,
+el nombre de campo de Baserow— y **solo existe en el backend**. Lo que recibe React
+está normalizado, así que la regla de que no conozca el origen se cumple por
+construcción y no por disciplina.
+
+Diez columnas estándar corresponden a campos de `Ticket`. Hasta veinte adicionales
+se alimentan del `metadata` del ticket, con nombre visible, tipo de dato, orden y
+visibilidad configurables. **Son espacios de configuración, no campos del modelo**:
+un proyecto que use tres tiene tres claves en `metadata`.
+
+`buildTicketColumns()` las traduce a `ColumnDefinition`. El framework de tablas no
+cambió: el tipo de dato pertenece al contrato de configuración, no al motor.
 
 ## Framework de tablas
 

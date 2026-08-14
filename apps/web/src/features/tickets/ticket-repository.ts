@@ -1,20 +1,20 @@
-import { mockTicketProvider } from './providers/mock-ticket.provider';
+import { httpTicketProvider } from './providers/http-ticket.provider';
 import type { TicketRepository } from './tickets.repository';
 
 /**
  * Origen de datos de Tickets que usa la aplicación.
  *
- * Esta línea es el único sitio donde se decide de dónde salen los tickets. Es el
- * equivalente en el frontend de lo que en NestJS es
- * `{ provide: TicketRepository, useClass: BaserowTicketProvider }`: el mismo
- * patrón, un solo punto de sustitución.
+ * Esta línea es el único sitio donde se decide de dónde salen los tickets **para
+ * el frontend**, y desde que Tickets tiene módulo en NestJS la respuesta es
+ * siempre la misma: de la API.
  *
- * Conectar el origen real será cambiar `mockTicketProvider` por el proveedor que
- * llame a la API. Nada más: los hooks consumen el contrato, y las pantallas
- * consumen los hooks.
+ * Qué hay detrás de esa API —el origen simulado, RedsisOne, Baserow o
+ * ServiceNow— lo decide `TicketProviderRegistry` en el backend a partir de la
+ * fuente de datos configurada. React no lo sabe, y esa es la frontera que la
+ * arquitectura existe para sostener (ver AGENTS.md y el ADR 0003).
  *
- * Existe aquí y no en el backend porque Tickets todavía no tiene módulo en NestJS
- * —es lo primero del próximo release—. Mientras eso llegue, la frontera está
- * declarada y nadie la puede saltar sin que se note.
+ * Se conserva la indirección aunque hoy solo haya una implementación porque es lo
+ * que permite montar la aplicación contra un doble en las pruebas sin tocar ningún
+ * hook ni ninguna pantalla.
  */
-export const ticketRepository: TicketRepository = mockTicketProvider;
+export const ticketRepository: TicketRepository = httpTicketProvider;

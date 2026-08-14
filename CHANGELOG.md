@@ -14,6 +14,79 @@ Cada versión enlaza su documento de alcance y, cuando existe, su resumen en
 
 ---
 
+## [0.8.0] — 14/08/2026 — Data Provider
+
+Alcance: [RELEASE_0.8_DATA_PROVIDER.md](RELEASE_0.8_DATA_PROVIDER.md).
+
+Tickets deja de funcionar con datos inventados dentro del frontend. La plataforma
+puede consumir proveedores distintos —hoy solo el simulado— sin que la interfaz
+conozca ninguno, y las conexiones se administran desde la propia aplicación.
+
+### Añadido
+
+- **Módulo Tickets en NestJS**: nueve endpoints con las dos puertas de
+  autorización, servicio con todas las reglas de negocio y proveedor simulado
+  detrás del Repository. Tickets deja de ser el único módulo sin backend.
+- **`TicketProviderRegistry`**: el origen de los tickets se resuelve **por
+  petición** en lugar de al arrancar, porque cada proyecto puede vivir en un
+  proveedor distinto. Ver [ADR 0003](docs/adr/0003-registro-de-proveedores-de-datos.md).
+- **Fuentes de datos administrables** (`/settings`): modelo `DataSource` en
+  PostgreSQL, CRUD completo y "Probar conexión". El formulario dibuja los campos
+  que declara cada proveedor, así que añadir uno no obliga a tocar React.
+- **Credenciales cifradas con AES-256-GCM**, con `DATA_SOURCE_ENCRYPTION_KEY`
+  validada al arrancar. Nunca vuelven al frontend: la API responde
+  `hasCredentials` y nada más.
+- **Columnas configurables por proyecto**: diez estándar más veinte espacios
+  adicionales con nombre visible, tipo de dato, orden y visibilidad propios. La
+  estructura la declara la fuente de datos, no el código.
+- **`metadata` en el ticket**: los datos que un proveedor entrega y el modelo no
+  nombra dejan de perderse. Se pueden mostrar, ordenar, filtrar y agrupar.
+- **Modo servidor en la tabla**: buscar, ordenar, filtrar y paginar los resuelve
+  el origen. El framework lo soportaba desde el Release 0.5 y nunca se había
+  ejercitado.
+- **Contratos nuevos**: `DataQuery`, `TicketColumnConfig`, `TicketColumnMapping`,
+  `DataSourceSummary`, `DataSourceProviderDefinition` y los esquemas del CRUD.
+- **Permisos** `data-sources.view/create/edit/delete`, dentro del módulo
+  Configuración.
+
+### Cambiado
+
+- **El frontend consume la API.** `httpTicketProvider` sustituye al origen
+  simulado, que se retiró entero junto con sus datos y sus reglas.
+- **El actor de las operaciones lo toma el backend del token.** El frontend ya no
+  puede decir quién hizo algo, que es la diferencia entre una auditoría y un campo
+  de texto.
+- **Las columnas de Tickets se construyen desde el catálogo compartido** en lugar
+  de escribirse a mano. El orden pasó a ser el del catálogo y apareció la columna
+  Zona, oculta por defecto.
+- **Los operadores de filtro viven en los contratos.** En modo servidor un filtro
+  viaja a la API, y declararlos en dos sitios permitía ofrecer un operador que el
+  servidor no sabe interpretar.
+- **El módulo Configuración tiene pantalla**: su `route` deja de ser nula.
+- La búsqueda ignora acentos: "clinica" encuentra "Clínica Santa Fe".
+
+### Retirado
+
+- `features/tickets/mocks/` y `mock-ticket.provider.ts` del frontend. Los datos de
+  prueba que necesitan las pruebas viven ahora en `src/test/`, donde no puede
+  consumirlos ningún componente.
+- El interruptor "Simular fallo" de la pantalla de Tickets, que existía para poder
+  ver el estado de error sin un origen real.
+
+### Corregido
+
+- `token.service.spec.ts` construía un `JwtPayload` sin `modules`, obligatorio
+  desde el Release 0.6. Estaba oculto por un `dist` de contratos desfasado.
+
+### Notas
+
+- Comprobado en un navegador real contra la API y PostgreSQL.
+- **Hay que volver a iniciar sesión**: el release añade cuatro permisos y un token
+  emitido antes no los lleva.
+- `DATA_SOURCE_ENCRYPTION_KEY` es obligatoria. Sin ella la API no arranca.
+
+---
+
 ## [0.7.0] — 31/07/2026 — Ticket Workspace
 
 Alcance: [RELEASE_0.7_TICKET_WORKSPACE.md](RELEASE_0.7_TICKET_WORKSPACE.md).

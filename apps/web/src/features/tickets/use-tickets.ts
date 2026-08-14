@@ -1,11 +1,23 @@
-import { useQuery, type UseQueryResult } from '@tanstack/react-query';
-import type { Ticket, TicketDetail, TicketEvent, TicketFieldChange } from '@redsis/contracts';
+import { keepPreviousData, useQuery, type UseQueryResult } from '@tanstack/react-query';
+import { useMemo } from 'react';
+import type {
+  DataQuery,
+  PaginatedResult,
+  Ticket,
+  TicketDetail,
+  TicketEvent,
+  TicketFieldChange,
+} from '@redsis/contracts';
+import type { ColumnDefinition } from '@/shared/types/table';
+import { buildTicketColumns } from './columns/build-ticket-columns';
+import { ticketColumns as defaultTicketColumns } from './columns/ticket.columns';
 import { ticketRepository } from './ticket-repository';
 
 /** Clave de caché del módulo. Agrupada para poder invalidarla completa. */
 export const ticketsQueryKeys = {
   all: ['tickets'] as const,
-  list: (options: { shouldFail: boolean }) => ['tickets', 'list', options] as const,
+  list: (query: DataQuery) => ['tickets', 'list', query] as const,
+  columns: () => ['tickets', 'columns'] as const,
   detail: (ticketId: string) => ['tickets', 'detail', ticketId] as const,
   timeline: (ticketId: string) => ['tickets', 'timeline', ticketId] as const,
   auditLog: (ticketId: string) => ['tickets', 'audit-log', ticketId] as const,
@@ -13,17 +25,47 @@ export const ticketsQueryKeys = {
 };
 
 /**
- * Consulta de tickets a través de TanStack Query.
+ * Página de tickets.
  *
  * Los componentes nunca llaman al Repository directamente: consumen este hook, que
- * aporta caché, estados de carga y de error. Es el eslabón que la arquitectura
- * define entre el acceso a datos y el DataTable.
+ * aporta caché, estados de carga y de error.
+ *
+ * La consulta forma parte de la clave de caché, así que cambiar de página, de orden
+ * o de filtro es una consulta distinta. Con `keepPreviousData` la tabla mantiene
+ * las filas mientras llega la página nueva: sin eso, cada clic en "siguiente"
+ * vaciaría la tabla y daría un parpadeo que parece un fallo.
  */
-export function useTickets({ shouldFail = false } = {}): UseQueryResult<Ticket[], Error> {
+export function useTickets(query: DataQuery): UseQueryResult<PaginatedResult<Ticket>, Error> {
   return useQuery({
-    queryKey: ticketsQueryKeys.list({ shouldFail }),
-    queryFn: () => ticketRepository.list({ shouldFail }),
+    queryKey: ticketsQueryKeys.list(query),
+    queryFn: () => ticketRepository.list(query),
+    placeholderData: keepPreviousData,
   });
+}
+
+/**
+ * Columnas que declara el proyecto.
+ *
+ * Se consultan al origen porque cada proyecto tiene su estructura: dos tableros
+ * distintos no muestran lo mismo. Mientras la respuesta llega —o si el origen no
+ * sabe describirse— se usan las columnas estándar, de modo que la tabla nunca
+ * queda sin cabeceras.
+ *
+ * El resultado se memoiza: si su identidad cambiara en cada render, el motor
+ * reconstruiría las columnas y la tabla perdería su estado interno.
+ */
+export function useTicketColumns(): ColumnDefinition<Ticket>[] {
+  const { data } = useQuery({
+    queryKey: ticketsQueryKeys.columns(),
+    queryFn: () => ticketRepository.describeColumns(),
+    // La estructura de un proyecto no cambia mientras alguien mira la tabla.
+    staleTime: 5 * 60 * 1000,
+  });
+
+  return useMemo(
+    () => (data === undefined ? defaultTicketColumns : buildTicketColumns(data)),
+    [data],
+  );
 }
 
 /**

@@ -1,7 +1,7 @@
 import { UnauthorizedException } from '@nestjs/common';
 import type { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
-import { PERMISSIONS, type JwtPayload } from '@redsis/contracts';
+import { APP_MODULES, PERMISSIONS, type JwtPayload } from '@redsis/contracts';
 import { TokenService } from './token.service';
 import type { Env } from '../../config/env.schema';
 
@@ -17,6 +17,9 @@ function buildPayload(): JwtPayload {
     sub: 'user-1',
     email: 'admin@redsis.com',
     roles: ['administrador'],
+    // El token transporta los módulos desde el Release 0.6: sin ellos la
+    // aplicación responde 403 en todas las pantallas.
+    modules: [APP_MODULES.USERS],
     permissions: [PERMISSIONS.USERS_VIEW],
   };
 }

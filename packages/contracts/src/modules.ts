@@ -111,9 +111,13 @@ export const APP_MODULE_DEFINITIONS: readonly AppModuleDefinition[] = [
   {
     key: APP_MODULES.SETTINGS,
     label: 'Configuración',
-    description: 'Ajustes de la plataforma',
-    permissionPrefixes: ['settings'],
-    route: null,
+    description: 'Ajustes de la plataforma y fuentes de datos',
+    // Las fuentes de datos se administran dentro de Configuración: es el módulo
+    // que el catálogo ya declaraba para los ajustes de la plataforma, y darles uno
+    // propio inflaría el catálogo por una pantalla. El prefijo distinto del nombre
+    // del módulo es justo para lo que existe este mapa (ver `roles` en Seguridad).
+    permissionPrefixes: ['settings', 'data-sources'],
+    route: '/settings',
   },
   {
     key: APP_MODULES.SECURITY,

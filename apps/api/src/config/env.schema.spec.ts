@@ -4,6 +4,7 @@ const VALID_ENV = {
   DATABASE_URL: 'postgresql://redsis:redsis@localhost:5432/redsis',
   JWT_SECRET: 'a'.repeat(32),
   REFRESH_TOKEN_SECRET: 'b'.repeat(32),
+  DATA_SOURCE_ENCRYPTION_KEY: 'd'.repeat(43),
 };
 
 describe('validateEnv', () => {
@@ -47,6 +48,34 @@ describe('validateEnv', () => {
   it('rechaza un puerto fuera de rango', () => {
     expect(() => validateEnv({ ...VALID_ENV, PORT: '99999' })).toThrow(/PORT/);
   });
+
+  it('el origen de tickets es el simulado si no se indica otro', () => {
+    expect(validateEnv({ ...VALID_ENV }).TICKETS_PROVIDER).toBe('mock');
+  });
+
+  it('rechaza un proveedor de tickets que no existe en el catálogo', () => {
+    expect(() => validateEnv({ ...VALID_ENV, TICKETS_PROVIDER: 'airtable' })).toThrow(
+      /TICKETS_PROVIDER/,
+    );
+  });
+
+  it('exige la clave con la que se cifran las credenciales', () => {
+    // Sin ella no se pueden guardar credenciales de proveedores externos, y
+    // descubrirlo al crear la primera fuente es demasiado tarde.
+    const withoutKey = {
+      DATABASE_URL: VALID_ENV.DATABASE_URL,
+      JWT_SECRET: VALID_ENV.JWT_SECRET,
+      REFRESH_TOKEN_SECRET: VALID_ENV.REFRESH_TOKEN_SECRET,
+    };
+
+    expect(() => validateEnv(withoutKey)).toThrow(/DATA_SOURCE_ENCRYPTION_KEY/);
+  });
+
+  it('rechaza una clave de cifrado demasiado corta', () => {
+    expect(() => validateEnv({ ...VALID_ENV, DATA_SOURCE_ENCRYPTION_KEY: 'corta' })).toThrow(
+      /DATA_SOURCE_ENCRYPTION_KEY/,
+    );
+  });
 });
 
 describe('assertProductionSafety', () => {
@@ -81,6 +110,16 @@ describe('assertProductionSafety', () => {
     });
 
     expect(() => assertProductionSafety(env)).toThrow(/deben ser distintos/);
+  });
+
+  it('rechaza la clave de cifrado de ejemplo en producción', () => {
+    const env = validateEnv({
+      ...VALID_ENV,
+      NODE_ENV: 'production',
+      DATA_SOURCE_ENCRYPTION_KEY: 'development-only-secret-development-only',
+    });
+
+    expect(() => assertProductionSafety(env)).toThrow(/clave de cifrado de ejemplo/);
   });
 
   it('acepta una configuración de producción correcta', () => {

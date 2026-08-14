@@ -38,7 +38,13 @@ describe('buildNavigation', () => {
   it('con acceso total muestra un enlace por módulo con pantalla', () => {
     const items = navigationFor([...ALL_APP_MODULES]);
 
-    expect(items.map((item) => item.to)).toEqual(['/', '/tickets', '/users', '/security']);
+    expect(items.map((item) => item.to)).toEqual([
+      '/',
+      '/tickets',
+      '/users',
+      '/settings',
+      '/security',
+    ]);
   });
 
   it('cada elemento lleva su etiqueta y su icono', () => {

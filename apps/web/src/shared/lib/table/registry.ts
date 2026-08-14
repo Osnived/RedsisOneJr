@@ -11,6 +11,7 @@ import type { ColumnDefinition } from '@/shared/types/table';
 export const TABLE_IDS = {
   TICKETS: 'tickets',
   USERS: 'users',
+  DATA_SOURCES: 'data-sources',
 } as const;
 
 export type TableId = (typeof TABLE_IDS)[keyof typeof TABLE_IDS];

@@ -1,6 +1,6 @@
 # TECH_DEBT.md
 
-Última actualización: 31/07/2026 (Release 0.7)
+Última actualización: 14/08/2026 (Release 0.8)
 
 Registro de deuda técnica. **Nada de aquí está implementado**: este documento
 existe para que lo pendiente esté escrito y no dependa de la memoria de nadie.
@@ -20,7 +20,30 @@ Este archivo responde "qué sabemos que falta o está a medias, y qué cuesta".
 
 ---
 
-# 0. Cerrado en el Sprint 0.6.1
+# 0. Cerrado en el Release 0.8
+
+Se deja constancia para que nadie vuelva a registrarlo como pendiente:
+
+- **El Repository de Tickets vivía en el frontend.** Tickets tiene módulo en
+  NestJS: `TicketRepository`, su servicio y su Provider viven donde manda la
+  arquitectura. Lo que queda en React es un proveedor que llama a la API.
+- **El estado de las acciones vivía en el navegador.** Ahora vive en el backend.
+  Sigue siendo memoria mientras el origen sea simulado, pero recargar la página ya
+  no lo pierde.
+- **Los mocks vivían dentro de la feature.** `features/tickets/mocks/` se retiró
+  entero. Los datos que necesitan las pruebas están en `src/test/`, donde ningún
+  componente puede consumirlos.
+- **El modo servidor de la tabla nunca se había ejercitado.** Era "el riesgo
+  técnico principal del release" según el NEXT anterior. Funciona: buscar, ordenar,
+  filtrar y paginar los resuelve el origen.
+- **El botón "Simular fallo" y su bug.** Se retiró con el origen simulado del
+  frontend, así que el error del esqueleto de carga desapareció con él.
+- **`token.service.spec.ts` compilaba contra un contrato viejo.** Un `dist`
+  desfasado ocultaba que construía un `JwtPayload` sin `modules`.
+
+---
+
+# 0.1. Cerrado en el Sprint 0.6.1
 
 Se deja constancia para que nadie vuelva a registrarlo como pendiente:
 
@@ -36,27 +59,41 @@ Se deja constancia para que nadie vuelva a registrarlo como pendiente:
 
 # 1. Riesgos abiertos
 
-## El Repository de Tickets vive en el frontend
+## La clave de cifrado hay que custodiarla
 
-**Impacto: medio. Coste: medio.**
+**Impacto: alto. Coste: bajo, pero es operativo y no de código.**
 
-La arquitectura sitúa Repository y Provider en NestJS (ver AGENTS.md). Tickets no
-tiene módulo en el backend, así que el Release 0.7 declaró la frontera en el
-frontend: `TicketRepository` como contrato, `mockTicketProvider` como
-implementación y `ticket-repository.ts` como único punto de sustitución.
+`DATA_SOURCE_ENCRYPTION_KEY` cifra las credenciales de los proveedores externos.
+Es obligatoria: sin ella la API no arranca.
 
-Es deliberado y está documentado, pero mientras exista hay una capa de acceso a
-datos donde la arquitectura no la quiere. Se resuelve en la integración con
-Baserow: el módulo Tickets en NestJS y un proveedor de este lado que llame a la
-API.
+- Si se **pierde**, las credenciales guardadas dejan de poder descifrarse y hay que
+  volver a introducirlas en cada fuente.
+- Si se **filtra**, vale tanto como los tokens que protege.
 
-## El estado de las acciones del ticket vive en memoria
+En desarrollo hay una generada localmente en `apps/api/.env`. **En el despliegue
+hay que generar otra y custodiarla**, y eso todavía no está resuelto porque no hay
+despliegue.
 
-**Impacto: medio hoy, nulo después. Coste: nulo.**
+El formato del sobre está versionado (`v1.`), así que rotar el algoritmo será
+posible sin adivinar cómo se cifró cada fila.
 
-Asignar un técnico, cambiar la prioridad, agregar una observación o avanzar el
-flujo cambian el origen simulado, que se pierde al recargar la página. Es lo
-esperado mientras no haya origen real, pero al probar parece que algo no se guardó.
+## La fuente configurada todavía no decide el origen
+
+**Impacto: medio. Coste: bajo.**
+
+Las fuentes de datos se administran, se guardan y se prueban, pero el registro de
+proveedores sigue resolviendo por `TICKETS_PROVIDER`. Falta el último eslabón:
+que el origen salga de la fuente por defecto y la variable quede como respaldo.
+
+Mientras tanto, designar una fuente por defecto no cambia de dónde salen los
+tickets, lo que puede desconcertar a quien la configure.
+
+## El estado del origen simulado vive en memoria
+
+**Impacto: bajo. Coste: nulo.**
+
+Asignar un técnico o avanzar el flujo se pierde al reiniciar la API. Es lo esperado
+mientras no haya proveedor real; recargar la página ya no lo pierde.
 
 ## Docker nunca se ha construido — **Deferred**
 
@@ -80,7 +117,10 @@ El pipeline de GitHub Actions existe y hay repositorio con remoto. Nadie ha
 comprobado el resultado de una ejecución. Si falla, el sospechoso principal es la
 construcción de imágenes Docker, por el punto anterior.
 
-Es lo más barato de comprobar y lo que más información da.
+Es lo más barato de comprobar y lo que más información da. El Release 0.8 dio una
+razón concreta: reconstruir los contratos destapó un error de compilación que un
+`dist` desfasado ocultaba. Construyendo desde cero, el CI habría fallado y nadie
+lo sabía.
 
 ## Dos pantallas sin ver en un navegador real
 
@@ -103,6 +143,46 @@ que ser manual.
 
 # 2. Funcionalidad a medias
 
+## Cuatro proveedores declarados y sin implementar
+
+**Impacto: bajo. Es intencionado.**
+
+RedsisOne, Baserow, ServiceNow y la base de datos propia están en el catálogo con
+sus parámetros declarados y su sitio en el registro. Ninguno tiene implementación:
+pedirlos falla con un mensaje claro en lugar de caer al simulado.
+
+Se puede crear una fuente con cualquiera de ellos —para tenerla configurada de
+antemano— pero no designarla como origen.
+
+## El descubrimiento de recursos está declarado y vacío
+
+**Impacto: bajo. Coste: bajo, cuando exista el proveedor.**
+
+`supportsResourceDiscovery` distingue los proveedores que sabrían enumerar sus
+tableros, y `DataSourceConnectionTest.resources` transporta el resultado. Hoy llega
+siempre vacío, así que el tablero se escribe a mano en lugar de elegirse de una
+lista.
+
+## Cuatro tipos de dato sin comportamiento propio
+
+**Impacto: bajo. Es intencionado.**
+
+`select`, `user`, `location` y `currency` están declarados y se muestran como
+texto. `IMPLEMENTED_COLUMN_DATA_TYPES` dice cuáles tienen comportamiento real, y
+añadir uno no cambiará la forma de una columna ya guardada.
+
+## Una columna nueva aparece visible aunque se declare oculta
+
+**Impacto: bajo. Coste: medio.**
+
+`isVisible: false` solo se aplica si el usuario no tiene preferencias guardadas
+para esa tabla. El motor considera visible toda columna que no esté en el mapa
+guardado, y una columna que no existía cuando se guardó no está.
+
+Es discutible: enseñar una columna nueva molesta menos que esconderla sin que nadie
+sepa que existe. Se resolvería fusionando las preferencias guardadas con las
+columnas conocidas al cargarlas.
+
 ## El timeline no muestra posición ni adjuntos
 
 **Impacto: bajo. Es intencionado.**
@@ -120,9 +200,12 @@ Asignar técnico y cambiar prioridad usan el `Select` de shadcn, que no funciona
 clics sintéticos en jsdom. Es la misma razón por la que `UserForm` tampoco tiene
 pruebas de componente desde el Release 0.5.
 
-Lo que sí está cubierto: los esquemas de validación, las reglas del origen, y el
+Lo que sí está cubierto: los esquemas de validación, las reglas del servicio, y el
 formulario de observación completo —usa un `textarea`—. Lo que falta es exactamente
 lo que cubriría Playwright.
+
+El formulario de fuentes de datos **sí** tiene pruebas de componente: usa un
+`select` nativo precisamente porque los campos son dinámicos.
 
 ## Crear y eliminar tickets siguen sin existir
 

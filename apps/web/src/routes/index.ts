@@ -4,6 +4,7 @@ import { dashboardRoute } from './dashboard.route';
 import { loginRoute } from './login.route';
 import { rootRoute } from './root.route';
 import { securityRoute } from './security.route';
+import { settingsRoute } from './settings.route';
 import { ticketDetailRoute } from './ticket-detail.route';
 import { ticketsRoute } from './tickets.route';
 import { usersRoute } from './users.route';
@@ -28,6 +29,7 @@ export const routeTree = rootRoute.addChildren([
     ticketDetailRoute,
     usersRoute,
     securityRoute,
+    settingsRoute,
   ]),
 ]);
 

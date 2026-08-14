@@ -1,107 +1,23 @@
-import { TICKET_PRIORITY_LABELS, TICKET_STATUS_LABELS, type Ticket } from '@redsis/contracts';
-import { defineColumns } from '@/shared/lib/table/registry';
-import { TicketPriorityBadge, TicketStatusBadge } from '../ticket-badges';
+import { STANDARD_TICKET_COLUMNS, type Ticket } from '@redsis/contracts';
+import type { ColumnDefinition } from '@/shared/types/table';
+import { buildTicketColumns } from './build-ticket-columns';
 
 /**
- * Columnas del módulo de Tickets.
+ * Columnas de Tickets cuando el proyecto no declara las suyas.
  *
- * Este archivo es lo único que el módulo aporta para tener su tabla: no contiene
- * consultas, ni estado, ni componentes de página. El DataTable no lo conoce; es
- * la página la que se lo entrega.
+ * Ya no se escriben a mano: se **construyen** desde el catálogo de columnas
+ * estándar del contrato compartido. Antes esta lista y el catálogo habrían sido dos
+ * copias de lo mismo, y bastaba con que una cambiara para que las vistas guardadas
+ * de los usuarios apuntaran a columnas inexistentes.
  *
- * Se usa extensión `.tsx` porque las columnas de estado y prioridad definen su
- * propio render. Mantener el render junto a la definición es lo que permite que
- * un módulo nuevo solo necesite este archivo.
+ * Es también el respaldo cuando el origen no sabe describirse: un proveedor que no
+ * entregue estructura de columnas hace que la tabla se dibuje con estas.
+ *
+ * Se declara en el ámbito del módulo para que su identidad sea estable, que es lo
+ * que el DataTable necesita para no reconstruir las columnas en cada render.
  */
-
-/**
- * Traduce un código a su etiqueta cuando se agrupa.
- *
- * El valor llega como `unknown` porque el framework no conoce el dominio; si no
- * corresponde a ningún código conocido se muestra tal cual en lugar de vacío,
- * que ocultaría un dato inesperado en vez de delatarlo.
- */
-function labelOf(labels: Record<string, string>, value: unknown): string {
-  return typeof value === 'string' ? (labels[value] ?? value) : String(value);
-}
-
-export const ticketColumns = defineColumns<Ticket>([
-  {
-    id: 'number',
-    header: 'Ticket',
-    accessor: (ticket) => ticket.number,
-    // El número identifica el servicio durante toda su vida: nunca se oculta.
-    hideable: false,
-    width: 150,
-    cell: (ticket) => <span className="font-medium">{ticket.number}</span>,
-  },
-  {
-    id: 'clientName',
-    header: 'Cliente',
-    accessor: (ticket) => ticket.clientName,
-    width: 180,
-  },
-  {
-    id: 'branchName',
-    header: 'Sucursal',
-    accessor: (ticket) => ticket.branchName,
-    width: 180,
-  },
-  {
-    id: 'city',
-    header: 'Ciudad',
-    accessor: (ticket) => ticket.city,
-    width: 140,
-    groupable: true,
-  },
-  {
-    id: 'status',
-    header: 'Estado',
-    // El accesor devuelve el código y no la etiqueta: así el orden y la búsqueda
-    // operan sobre el dato real, no sobre su representación.
-    accessor: (ticket) => ticket.status,
-    width: 130,
-    align: 'center',
-    groupable: true,
-    // El grupo debe leerse "En ruta", no "en-ruta": traducir el código es
-    // conocimiento del dominio y por eso vive aquí.
-    groupLabel: (value) => labelOf(TICKET_STATUS_LABELS, value),
-    cell: (ticket) => <TicketStatusBadge status={ticket.status} />,
-  },
-  {
-    id: 'priority',
-    header: 'Prioridad',
-    accessor: (ticket) => ticket.priority,
-    width: 120,
-    align: 'center',
-    groupable: true,
-    groupLabel: (value) => labelOf(TICKET_PRIORITY_LABELS, value),
-    cell: (ticket) => <TicketPriorityBadge priority={ticket.priority} />,
-  },
-  {
-    id: 'technicianName',
-    header: 'Técnico',
-    accessor: (ticket) => ticket.technicianName,
-    width: 170,
-    groupable: true,
-  },
-  {
-    id: 'createdAt',
-    header: 'Creación',
-    // Se devuelve Date y no el texto ISO para que el orden sea cronológico
-    // y el formato lo aplique el framework de forma uniforme.
-    accessor: (ticket) => new Date(ticket.createdAt),
-    width: 130,
-  },
-  {
-    id: 'updatedAt',
-    header: 'Última actualización',
-    accessor: (ticket) => new Date(ticket.updatedAt),
-    width: 170,
-    // Dato de seguimiento, útil pero secundario: no satura la vista inicial.
-    hiddenByDefault: true,
-  },
-]);
+export const ticketColumns: ColumnDefinition<Ticket>[] =
+  buildTicketColumns(STANDARD_TICKET_COLUMNS);
 
 /** Identidad estable de una fila de Tickets. */
 export const getTicketRowId = (ticket: Ticket): string => ticket.id;

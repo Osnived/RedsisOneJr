@@ -1,6 +1,6 @@
 # PROJECT_STATUS.md
 
-Última actualización: 31/07/2026 (Release 0.7)
+Última actualización: 14/08/2026 (Release 0.8)
 
 Este documento es el punto de entrada para retomar el proyecto. Responde tres
 preguntas: **qué funciona hoy**, **qué falta**, y **qué hacer a continuación**.
@@ -12,18 +12,19 @@ Se actualiza al terminar cada MVP.
 # 1. Resumen en una línea
 
 Plataforma empresarial modular con autenticación propia, autorización de dos
-niveles administrable desde una pantalla, framework de tablas reutilizable y el
-Ticket como centro de la operación, con su propio espacio de trabajo.
-**Release 0.7 cerrado, comprobado en navegador e integrado en `main`. Sin integrar
-Baserow todavía.**
+niveles administrable desde una pantalla, framework de tablas reutilizable, el
+Ticket como centro de la operación y una **capa de proveedores de datos
+intercambiables** administrable desde la aplicación.
+**Release 0.8 cerrado y comprobado en navegador. Ningún proveedor externo
+implementado todavía: solo el origen simulado.**
 
-| Métrica               | Valor                                          |
-| --------------------- | ---------------------------------------------- |
-| Pruebas               | 722 (84 API + 596 web + 42 contratos)          |
-| `any` en el código    | 0                                              |
-| Componente más grande | Por debajo de 250 líneas                       |
-| Lint / tipos / build  | Limpios                                        |
-| Rama                  | `main`, con los Releases 0.5, 0.6, 0.6.1 y 0.7 |
+| Métrica               | Valor                                                        |
+| --------------------- | ------------------------------------------------------------ |
+| Pruebas               | 839 (164 API + 595 web + 80 contratos)                       |
+| `any` en el código    | 0                                                            |
+| Componente más grande | Por debajo de 250 líneas                                     |
+| Lint / tipos / build  | Limpios                                                      |
+| Rama                  | `feature/data-provider-ticket-layer`, sin integrar en `main` |
 
 ---
 
@@ -34,14 +35,15 @@ Baserow todavía.**
 Arrancar con las instrucciones de [docs/GETTING_STARTED.md](docs/GETTING_STARTED.md)
 y entrar con `admin@redsis.com` / `Redsis2026`.
 
-| Pantalla  | Ruta           | Estado                                                    |
-| --------- | -------------- | --------------------------------------------------------- |
-| Login     | `/login`       | Autenticación real contra la API                          |
-| Panel     | `/`            | Tarjetas con datos reales (rol, permisos, total usuarios) |
-| Tickets   | `/tickets`     | **Tabla avanzada** para localizar: la fila abre el ticket |
-| Ticket    | `/tickets/:id` | **Espacio de trabajo**: timeline, auditoría y operación   |
-| Usuarios  | `/users`       | **CRUD completo**: crear, editar, activar, suspender      |
-| Seguridad | `/security`    | **Administración de accesos** con auditoría e historial   |
+| Pantalla      | Ruta           | Estado                                                      |
+| ------------- | -------------- | ----------------------------------------------------------- |
+| Login         | `/login`       | Autenticación real contra la API                            |
+| Panel         | `/`            | Tarjetas con datos reales (rol, permisos, total usuarios)   |
+| Tickets       | `/tickets`     | **Tabla avanzada en modo servidor**: la fila abre el ticket |
+| Ticket        | `/tickets/:id` | **Espacio de trabajo**: timeline, auditoría y operación     |
+| Usuarios      | `/users`       | **CRUD completo**: crear, editar, activar, suspender        |
+| Configuración | `/settings`    | **Fuentes de datos**: de dónde salen los tickets            |
+| Seguridad     | `/security`    | **Administración de accesos** con auditoría e historial     |
 
 Las pantallas `/roles` y `/permissions` **se retiraron** en el Release 0.6:
 Seguridad las reemplaza por completo.
@@ -56,17 +58,23 @@ Cuentas de prueba existentes:
 
 ## Backend
 
-| Módulo         | Endpoints                                                      |
-| -------------- | -------------------------------------------------------------- |
-| `auth`         | login, refresh, logout, me                                     |
-| `users`        | listar, ver, crear, actualizar, desactivar                     |
-| `roles`        | listar, ver (para asignar roles a usuarios)                    |
-| `permissions`  | listar, listar agrupado por módulo                             |
-| `security`     | catálogo, roles, crear, actualizar, cambiar accesos, auditoría |
-| `activity-log` | listar                                                         |
-| `health`       | estado del servicio y de la base de datos                      |
+| Módulo         | Endpoints                                                                          |
+| -------------- | ---------------------------------------------------------------------------------- |
+| `auth`         | login, refresh, logout, me                                                         |
+| `users`        | listar, ver, crear, actualizar, desactivar                                         |
+| `roles`        | listar, ver (para asignar roles a usuarios)                                        |
+| `permissions`  | listar, listar agrupado por módulo                                                 |
+| `security`     | catálogo, roles, crear, actualizar, cambiar accesos, auditoría                     |
+| `tickets`      | listar, columnas, técnicos, detalle, timeline, auditoría, y las cuatro operaciones |
+| `data-sources` | proveedores, listar, crear, actualizar, retirar, por defecto, probar conexión      |
+| `activity-log` | listar                                                                             |
+| `health`       | estado del servicio y de la base de datos                                          |
 
 Todos con Repository + Provider. Ningún servicio ni controlador inyecta Prisma.
+
+**Tickets es la excepción a cómo se resuelve el Provider**: no se fija al arrancar
+sino por petición, porque cada proyecto puede vivir en un proveedor distinto. Ver
+[ADR 0003](docs/adr/0003-registro-de-proveedores-de-datos.md).
 
 ## Autorización
 
@@ -136,20 +144,55 @@ Operar exige `tickets.edit`. Quien solo consulta ve el ticket y no las acciones.
 
 ## Origen de datos de Tickets
 
-Tickets sigue **sin módulo en el backend**. Mientras eso llegue, la frontera está
-declarada en el frontend:
+Desde el Release 0.8 el camino completo es:
 
 ```
-pantalla -> hook -> TicketRepository -> mockTicketProvider -> origen en memoria
+pantalla -> hook -> TicketRepository (contrato) -> httpTicketProvider -> API
+                                                                          |
+   TicketsService (todas las reglas) <- TicketProviderRegistry <----------+
+                            |
+        MockTicketProvider  |  RedsisOne · Baserow · ServiceNow · PostgreSQL
+        (implementado)      |  (declarados, sin implementar)
 ```
 
-`ticket-repository.ts` es el único sitio donde se decide de dónde salen los tickets,
-igual que `{ provide: TicketRepository, useClass: ... }` en NestJS. Ningún componente
-consume mocks.
+**React no sabe de dónde vienen los datos.** Solo conoce la API; qué origen la
+atiende lo decide el registro de proveedores en el backend.
 
-El origen simulado guarda el estado una vez y aplica las reglas —qué estado sigue a
-qué paso, qué se audita, qué va al timeline—, así que la tabla y el detalle no pueden
-discrepar. **Vive en memoria: se pierde al recargar la página.**
+Qué se puede administrar desde `/settings`:
+
+| Concepto               | Qué es                                                                    |
+| ---------------------- | ------------------------------------------------------------------------- |
+| Fuente de datos        | Un proyecto: un tablero concreto de un proveedor concreto                 |
+| Parámetros             | Los que declara el proveedor. La pantalla los dibuja sin saber cuáles son |
+| Credenciales           | Cifradas con AES-256-GCM. **Nunca vuelven al frontend**                   |
+| Probar conexión        | Comprueba una configuración antes de guardarla                            |
+| Estructura de columnas | Diez estándar más hasta veinte adicionales, por proyecto                  |
+
+Las reglas del ticket —qué estado sigue a qué paso, qué se audita, qué va al
+timeline— viven en `TicketsService`. Un Provider guarda lo que recibe, así que
+cambiar de origen no puede cambiar el comportamiento del negocio.
+
+**El origen simulado sigue viviendo en memoria**: sus cambios se pierden al
+reiniciar la API. Es lo esperado mientras no haya proveedor real.
+
+## Columnas por proyecto
+
+La estructura de la tabla la declara la fuente de datos, no el código:
+
+- **Diez columnas estándar** que corresponden a campos del contrato `Ticket`.
+- **Hasta veinte adicionales** (`ColumnaAgrega1`…`ColumnaAgrega20`), cada una con
+  su nombre visible, tipo de dato, orden y visibilidad. Son espacios de
+  configuración, **no campos del modelo**: un proyecto que use tres tiene tres
+  claves en el `metadata` del ticket.
+- Nueve tipos de dato declarados; cinco con comportamiento propio (texto, número,
+  booleano, fecha y hora, estado) y cuatro pendientes.
+
+El origen simulado declara tres adicionales —"Fecha compromiso", "Tipo de
+servicio" y "Número de equipo"— para que la capacidad se vea funcionando.
+
+Lo que llega al frontend está **normalizado**: no contiene identificadores del
+proveedor. El mapa entre una columna y el campo real del origen
+(`TicketColumnMapping`) solo existe en el backend.
 
 ## Vista adaptativa
 
@@ -189,17 +232,29 @@ shared/
 
 # 3. Qué falta
 
-## Del Release 0.7
+## Del Release 0.8
 
 Nada de su alcance. Lo que quedó declarado y sin implementar a propósito:
 
+- **Los cuatro proveedores externos.** RedsisOne, Baserow, ServiceNow y la base de
+  datos propia están en el catálogo, con sus parámetros declarados y su sitio en el
+  registro. Ninguno tiene implementación: pedirlos falla con un mensaje claro en
+  lugar de caer al simulado.
+- **Descubrimiento de recursos.** `supportsResourceDiscovery` está declarado y
+  `DataSourceConnectionTest.resources` llega siempre vacío. Elegir un tablero de una
+  lista exige antes el proveedor de RedsisOne.
+- **La fuente configurada todavía no decide el origen.** El registro resuelve por
+  `TICKETS_PROVIDER`; las fuentes se administran y se guardan, pero conectarlas al
+  registro es el paso siguiente.
+- **Cuatro tipos de dato sin comportamiento propio**: `select`, `user`, `location`
+  y `currency` se muestran como texto.
+
+## Del Release 0.7
+
 - **GPS y adjuntos del timeline.** `TicketEvent` lleva `location` y `attachments`
-  y hoy llegan siempre vacíos. El MVP 5 pedía preparar la estructura, no
-  implementarlos.
+  y hoy llegan siempre vacíos.
 - **`tickets.create` y `tickets.delete`** siguen en el catálogo sin que ninguna
-  acción los use. Crear y eliminar tickets depende de quién sea la fuente de verdad,
-  que es una decisión del próximo release.
-- **Módulo Tickets en el backend.** Es lo primero de la integración con Baserow.
+  acción los use. Depende de quién sea la fuente de verdad de los tickets.
 
 ## Módulos declarados sin construir
 
@@ -209,10 +264,11 @@ acceso desde Seguridad, y el menú no los dibuja hasta que existan.
 
 ## Del MVP original de la plataforma
 
-- Integración con Baserow (siguiente release)
+- Integración con un proveedor real (la arquitectura está lista; falta escribirlo)
 - Dashboard con gráficas (ECharts está instalado y sin usar)
 - Google Maps (la librería no está instalada)
-- Módulo de Configuración (tabla `settings` vacía)
+- Ajustes generales de la plataforma: `/settings` existe pero solo administra
+  fuentes de datos. La tabla `settings` sigue vacía.
 
 ---
 
@@ -229,21 +285,31 @@ El detalle completo, con causa y coste estimado, está en
 **CI nunca se ha verificado en verde.** El pipeline existe y hay repositorio con
 remoto. Nadie ha comprobado el resultado.
 
-**Bug del estado de error en Tickets.** El botón "Simular fallo" deja la tabla en
-el esqueleto de carga sin llegar nunca al estado de error.
+**La clave de cifrado hay que custodiarla.** `DATA_SOURCE_ENCRYPTION_KEY` es
+obligatoria y sin ella la API no arranca. Si se pierde, las credenciales guardadas
+no se pueden descifrar y hay que volver a introducirlas; si se filtra, valen tanto
+como los tokens que protege. En desarrollo hay una generada localmente en
+`apps/api/.env`; **en despliegue hay que generar otra**.
 
-**Esquema muerto en Prisma.** `zones`, `branches`, `settings` y `user_zones`
-existen pero cero código las usa.
+**Esquema muerto en Prisma.** `zones`, `branches` y `user_zones` existen pero cero
+código las usa. `settings` sigue vacía: las fuentes de datos tienen su propia
+tabla, no son un ajuste.
 
 **La pantalla de Seguridad no se ha visto en un navegador real.** Está cubierta
 por pruebas, incluidas las reglas de acceso, pero no se ha comprobado en pantalla.
 
 **La vista de tarjetas de Tickets tampoco.** Exige entrar con la cuenta del
-técnico. El espacio de trabajo del ticket sí se comprobó al cerrar el Release 0.7.
+técnico. El espacio de trabajo del ticket sí se comprobó al cerrar el Release 0.7,
+y la tabla, el detalle y `/settings` al cerrar el 0.8.
 
-**El estado de las acciones del ticket vive en memoria.** Asignar un técnico o
-avanzar el flujo se pierde al recargar. Es lo esperado mientras el origen sea
-simulado, pero conviene saberlo antes de probar.
+**El estado del origen simulado vive en memoria.** Asignar un técnico o avanzar el
+flujo se pierde **al reiniciar la API** —ya no al recargar la página, que era el
+caso antes—. Es lo esperado mientras el origen sea simulado.
+
+**Una columna nueva aparece visible aunque el proyecto la declare oculta**, si el
+usuario ya tenía preferencias guardadas para esa tabla. El motor considera visible
+toda columna que no esté en el mapa guardado. Es discutible, pero enseñar una
+columna nueva molesta menos que esconderla sin que nadie sepa que existe.
 
 ## Contradicciones pendientes de decisión
 
@@ -265,19 +331,21 @@ nombre.
 
 Recomendación por orden:
 
-1. **Comprobar el CI en GitHub Actions.** Es lo más barato y lo que más información
-   da, y ahora hay algo que comprobar: `main` acaba de recibir tres releases.
-2. **Comprobar la pantalla de Seguridad en el navegador**, con las tres cuentas:
-   que el supervisor no vea Seguridad ni entre por URL, y que el administrador
-   aparezca como acceso total y no editable.
-3. **Decidir las seis preguntas del Release 0.8** antes de escribir código. Están en
-   [NEXT.md](NEXT.md) y todas cambian el diseño: quién es la fuente de verdad de los
-   tickets, dónde viven el timeline y la auditoría, quién los crea, cómo se
-   relacionan con clientes y sucursales, qué pasa si Baserow no responde y cómo
-   pagina.
-4. **Empezar el Release 0.8**: módulo Tickets en NestJS e integración con Baserow.
-   Ver [NEXT.md](NEXT.md).
-5. **Resolver las contradicciones** que quedan en la sección 4. Ninguna bloquea.
+1. **Integrar el Release 0.8 en `main`.** Está terminado y comprobado, y vive en
+   `feature/data-provider-ticket-layer` sin commitear.
+2. **Comprobar el CI en GitHub Actions.** Es lo más barato y lo que más información
+   da. Nunca se ha visto una ejecución en verde, y el 0.8 destapó que un `dist` de
+   contratos desfasado ocultaba un error de compilación: construyendo desde cero
+   habría fallado.
+3. **Conectar la fuente configurada al registro de proveedores.** Hoy el origen lo
+   decide `TICKETS_PROVIDER` y las fuentes se administran sin gobernar todavía qué
+   atiende. Es el último eslabón de la cadena.
+4. **Escribir el proveedor de RedsisOne.** La arquitectura está lista y su
+   documentación OpenAPI está en `docs/RedsisOne-EndPoints.yaml`. Hace falta una
+   respuesta de ejemplo: la exportación no trae cuerpos de respuesta, así que no se
+   conoce la forma de lo que devuelve.
+5. **Comprobar la pantalla de Seguridad en el navegador**, con las tres cuentas.
+6. **Resolver las contradicciones** que quedan en la sección 4. Ninguna bloquea.
 
 ---
 

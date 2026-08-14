@@ -207,6 +207,56 @@ model ActivityLog {
   @@map("activity_logs")
 }
 
+/// Conexión con un origen de datos operacionales: un proyecto.
+///
+/// Es una entidad propia y no una fila de `settings` porque no es un ajuste: tiene
+/// forma, se audita, guarda secretos y no es ni global ni personal. Reutilizar
+/// `settings` habría metido tokens de terceros en una tabla clave-valor sin
+/// validación ni cifrado.
+///
+/// El módulo Tickets resuelve su Provider a partir de estas filas, así que dos
+/// proyectos pueden estar en proveedores distintos (ver ADR 0003).
+model DataSource {
+  id          String  @id @default(uuid()) @db.Uuid
+  name        String  @unique
+  description String?
+
+  /// Clave del proveedor (`mock`, `redsis-one`, `baserow`...).
+  ///
+  /// Se guarda como texto y no como enumeración de PostgreSQL por la misma razón
+  /// que los módulos: el catálogo vive en el código, porque un proveedor existe
+  /// cuando alguien lo programa, no cuando alguien inserta una fila.
+  provider String
+
+  /// Parámetros no sensibles: URL del servicio, identificador del tablero.
+  /// Viajan al frontend tal cual.
+  settings Json @default("{}")
+
+  /// Credenciales cifradas con AES-256-GCM. Nunca salen de la API.
+  ///
+  /// Se almacena el sobre completo —vector de inicialización, etiqueta de
+  /// autenticación y texto cifrado— porque descifrar exige las tres partes y
+  /// repartirlas en columnas distintas solo invita a perder una.
+  credentials String?
+
+  isActive Boolean @default(true) @map("is_active")
+
+  /// La fuente que se usa cuando no se pide un proyecto concreto.
+  /// Solo una puede serlo a la vez; lo garantiza el servicio, en transacción.
+  isDefault Boolean @default(false) @map("is_default")
+
+  /// Resultado de la última comprobación de conexión. Nulos si nunca se probó.
+  lastCheckedAt DateTime? @map("last_checked_at")
+  lastCheckOk   Boolean?  @map("last_check_ok")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([provider])
+  @@index([isActive])
+  @@map("data_sources")
+}
+
 /// Configuración global (userId nulo) o preferencia personal (userId asignado).
 model Setting {
   id        String   @id @default(uuid()) @db.Uuid

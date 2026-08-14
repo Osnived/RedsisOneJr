@@ -2,18 +2,23 @@ import { describe, expect, it, vi } from 'vitest';
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { Ticket } from '@redsis/contracts';
-import { MOCK_TICKETS } from '../mocks/tickets.mock';
+import { MOCK_TICKETS } from '@/test/ticket-fixtures';
+import { ticketColumns } from '../columns/ticket.columns';
 import { TicketCardView } from './ticket-card-view';
 import type { TicketViewProps } from './ticket-view.types';
 
 function renderCards(overrides: Partial<TicketViewProps> = {}) {
   const onViewDetail = overrides.onViewDetail ?? vi.fn();
+  const tickets = overrides.tickets ?? MOCK_TICKETS.slice(0, 3);
 
   render(
     <TicketCardView
-      tickets={overrides.tickets ?? MOCK_TICKETS.slice(0, 3)}
+      tickets={tickets}
+      columns={overrides.columns ?? ticketColumns}
+      totalRows={overrides.totalRows ?? tickets.length}
       loading={overrides.loading ?? false}
       error={overrides.error ?? null}
+      onQueryChange={overrides.onQueryChange ?? vi.fn()}
       onViewDetail={onViewDetail}
     />,
   );
@@ -45,7 +50,11 @@ describe('TicketCardView', () => {
     expect(within(card).getByText(new RegExp(ticket.city))).toBeInTheDocument();
     expect(within(card).getByText('Nuevo')).toBeInTheDocument();
     expect(within(card).getByText('Alta')).toBeInTheDocument();
-    expect(within(card).getByText('28/7/2026')).toBeInTheDocument();
+    // La fecha se deriva del propio ticket: codificarla ataría la prueba a los
+    // datos de ejemplo en lugar de a lo que la tarjeta debe mostrar.
+    expect(
+      within(card).getByText(new Date(ticket.createdAt).toLocaleDateString('es')),
+    ).toBeInTheDocument();
   });
 
   it('nombra al técnico asignado', () => {

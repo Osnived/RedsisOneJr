@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -6,6 +6,17 @@ import { RouterProvider, createMemoryHistory, createRouter } from '@tanstack/rea
 import { ALL_APP_MODULES, PERMISSIONS, type AuthTokens, type Permission } from '@redsis/contracts';
 import { useAuthStore } from '@/stores/auth.store';
 import { routeTree } from './index';
+
+/**
+ * El origen de datos se sustituye por un doble: estas pruebas comprueban la
+ * navegación, no la API. El doble se crea dentro del factory porque `vi.mock` se
+ * eleva por encima de las declaraciones del archivo.
+ */
+vi.mock('@/features/tickets/ticket-repository', async () => {
+  const { createTicketRepositoryDouble } = await import('@/test/ticket-repository-double');
+
+  return { ticketRepository: createTicketRepositoryDouble() };
+});
 
 const TOKENS: AuthTokens = { accessToken: 'a', refreshToken: 'r', expiresIn: 900 };
 

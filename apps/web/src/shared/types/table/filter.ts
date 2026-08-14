@@ -1,20 +1,18 @@
+import type { FilterOperator, QueryFilter } from '@redsis/contracts';
+
 /**
  * Operadores del constructor de filtros.
  *
- * La lista es cerrada a propósito: un filtro guardado en una vista debe seguir
- * siendo interpretable dentro de meses, y un operador libre no lo garantiza.
+ * La lista **vive en los contratos compartidos** y aquí solo se re-exporta. En
+ * modo servidor un filtro viaja a la API y el Provider lo traduce al lenguaje de
+ * su origen (`columnId = valor` en RedsisOne, `campo__equal` en Baserow), así que
+ * declararlo en dos sitios permitiría que la tabla ofreciera un operador que el
+ * servidor no sabe interpretar.
+ *
+ * Lo que sí es de este lado son las etiquetas: son presentación.
  */
-export const FILTER_OPERATORS = [
-  'es',
-  'noEs',
-  'contiene',
-  'empiezaPor',
-  'terminaPor',
-  'vacio',
-  'noVacio',
-] as const;
-
-export type FilterOperator = (typeof FILTER_OPERATORS)[number];
+export { FILTER_OPERATORS, operatorNeedsValue } from '@redsis/contracts';
+export type { FilterOperator } from '@redsis/contracts';
 
 /** Texto que ve el usuario. Los identificadores nunca se muestran. */
 export const FILTER_OPERATOR_LABELS: Record<FilterOperator, string> = {
@@ -27,23 +25,12 @@ export const FILTER_OPERATOR_LABELS: Record<FilterOperator, string> = {
   noVacio: 'no vacío',
 };
 
-/** Operadores que preguntan por la ausencia de dato y no admiten valor. */
-const VALUELESS_OPERATORS: readonly FilterOperator[] = ['vacio', 'noVacio'];
-
-export function operatorNeedsValue(operator: FilterOperator): boolean {
-  return !VALUELESS_OPERATORS.includes(operator);
-}
-
 /**
  * Una condición del constructor de filtros.
  *
- * El identificador es de la condición, no de la columna: el usuario puede
- * declarar varias condiciones sobre el mismo campo.
+ * Es el `QueryFilter` del contrato compartido bajo el nombre que ya usaba el
+ * framework de tablas. Se conserva el alias porque el nombre describe mejor de
+ * qué se habla dentro de la tabla avanzada, y renombrarlo en veinte archivos no
+ * aportaría nada.
  */
-export interface AdvancedFilter {
-  id: string;
-  columnId: string;
-  operator: FilterOperator;
-  /** Se ignora cuando el operador no lo necesita. */
-  value: string;
-}
+export type AdvancedFilter = QueryFilter;

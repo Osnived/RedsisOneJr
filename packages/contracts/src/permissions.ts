@@ -32,6 +32,21 @@ export const PERMISSIONS = {
 
   SETTINGS_VIEW: 'settings.view',
   SETTINGS_EDIT: 'settings.edit',
+
+  /**
+   * Administración de las fuentes de datos.
+   *
+   * Son permisos propios y no `settings.edit` porque conceden acceso a las
+   * credenciales de sistemas externos: quien puede cambiar el idioma de la
+   * plataforma no tiene por qué poder apuntar los tickets a otro servidor.
+   *
+   * Probar una conexión exige `edit`: lanza una petición saliente con las
+   * credenciales configuradas, y eso es operar sobre la fuente, no consultarla.
+   */
+  DATA_SOURCES_VIEW: 'data-sources.view',
+  DATA_SOURCES_CREATE: 'data-sources.create',
+  DATA_SOURCES_EDIT: 'data-sources.edit',
+  DATA_SOURCES_DELETE: 'data-sources.delete',
 } as const;
 
 export type Permission = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];

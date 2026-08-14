@@ -1,4 +1,5 @@
 import type { Ticket } from '@redsis/contracts';
+import type { ColumnDefinition, TableQuery } from '@/shared/types/table';
 
 /**
  * Contrato que cumple toda vista de Tickets.
@@ -11,9 +12,30 @@ import type { Ticket } from '@redsis/contracts';
  * Ninguna vista recibe lógica de negocio, solo datos y avisos.
  */
 export interface TicketViewProps {
+  /** La página actual, no todos los tickets: el origen pagina en el servidor. */
   tickets: Ticket[];
+
+  /**
+   * Columnas que declara el proyecto.
+   *
+   * Llegan construidas desde la configuración de la fuente de datos, así que dos
+   * proyectos con estructuras distintas usan la misma vista sin modificarla.
+   */
+  columns: ColumnDefinition<Ticket>[];
+
+  /** Total de registros que cumplen la consulta. Sin él no se puede paginar. */
+  totalRows: number;
+
   loading: boolean;
   error: Error | null;
+
+  /**
+   * Se invoca cuando cambia la página, el orden, la búsqueda o los filtros.
+   *
+   * La vista no consulta: avisa. Quien pide los datos es la página, que es la
+   * única que conoce el hook.
+   */
+  onQueryChange: (query: TableQuery) => void;
 
   /**
    * Se invoca al elegir un ticket, y lleva a su pantalla.

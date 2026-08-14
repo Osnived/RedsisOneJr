@@ -5,15 +5,32 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import {
   ALL_APP_MODULES,
   PERMISSIONS,
-  TICKET_STATUSES,
   TICKET_WORKFLOW_STEPS,
   type AuthTokens,
   type Permission,
   type TicketDetail,
 } from '@redsis/contracts';
 import { useAuthStore } from '@/stores/auth.store';
-import { ticketStore } from '../mocks/ticket-store.mock';
+import { MOCK_TICKETS } from '@/test/ticket-fixtures';
+import type { createTicketRepositoryDouble } from '@/test/ticket-repository-double';
+import { ticketRepository } from '../ticket-repository';
 import { TicketWorkspace } from './ticket-workspace';
+
+/**
+ * El Repository se sustituye por un doble con estado.
+ *
+ * Las secciones que consultan por su cuenta —timeline y auditoría— y las acciones
+ * atraviesan el mismo camino que usará la pantalla, sin red de por medio. El doble
+ * se crea dentro del factory porque `vi.mock` se eleva por encima de las
+ * declaraciones del archivo.
+ */
+vi.mock('../ticket-repository', async () => {
+  const { createTicketRepositoryDouble } = await import('@/test/ticket-repository-double');
+
+  return { ticketRepository: createTicketRepositoryDouble() };
+});
+
+const repository = ticketRepository as ReturnType<typeof createTicketRepositoryDouble>;
 
 /**
  * El espacio de trabajo completo.
@@ -48,14 +65,30 @@ function authenticate(permissions: Permission[]): void {
   );
 }
 
+/**
+ * El ticket tal como lo entrega la ruta.
+ *
+ * Se lee del doble y no de una constante para que refleje lo que las acciones ya
+ * hayan cambiado dentro de la misma prueba.
+ */
 function detailOf(ticketId: string): TicketDetail {
-  const detail = ticketStore.findDetail(ticketId);
+  const detail = detailsById.get(ticketId);
 
-  if (detail === null) {
+  if (detail === undefined) {
     throw new Error(`El ticket ${ticketId} debería existir en los datos de prueba.`);
   }
 
   return detail;
+}
+
+/** Instantánea de los detalles, refrescada antes de cada prueba. */
+let detailsById = new Map<string, TicketDetail>();
+
+async function loadDetails(): Promise<void> {
+  const ids = MOCK_TICKETS.map((ticket) => ticket.id);
+  const details = await Promise.all(ids.map((id) => repository.findDetail(id)));
+
+  detailsById = new Map(details.map((detail) => [detail.id, detail]));
 }
 
 function renderWorkspace(ticket: TicketDetail) {
@@ -73,8 +106,9 @@ function section(name: string): HTMLElement {
   return screen.getByRole('region', { name });
 }
 
-beforeEach(() => {
-  ticketStore.reset();
+beforeEach(async () => {
+  repository.reset();
+  await loadDetails();
   authenticate([PERMISSIONS.TICKETS_VIEW, PERMISSIONS.TICKETS_EDIT]);
 });
 
@@ -110,7 +144,7 @@ describe('cabecera del ticket', () => {
       expect(fields.getByText(label)).toBeInTheDocument();
     }
 
-    expect(fields.getByText(ticket.zoneName)).toBeInTheDocument();
+    expect(fields.getByText(ticket.zoneName ?? 'Sin zona')).toBeInTheDocument();
     expect(fields.getByText('Carlos Ruiz')).toBeInTheDocument();
   });
 
@@ -215,7 +249,9 @@ describe('auditoría', () => {
   });
 
   it('dice que no hay cambios cuando un ticket es nuevo', async () => {
-    renderWorkspace(detailOf('14'));
+    // Un ticket recién creado no tiene ningún cambio, y eso es información, no un
+    // hueco. El 15 es uno de los que la semilla deja sin asignar.
+    renderWorkspace(detailOf('15'));
 
     expect(
       await within(section('Auditoría')).findByText(/Ningún dato ha cambiado/),
@@ -302,17 +338,22 @@ describe('flujo del técnico', () => {
     expect(screen.getByText('Paso 3 de 6')).toBeInTheDocument();
   });
 
-  it('al avanzar aparece el paso siguiente y el estado cambia', async () => {
+  it('al avanzar aparece el paso siguiente', async () => {
     const user = userEvent.setup();
     const { rerender } = renderWorkspace(detailOf('3'));
 
     await user.click(within(section('Intervención')).getByRole('button', { name: 'Llegué' }));
 
-    await waitFor(() => {
-      expect(detailOf('3').status).toBe(TICKET_STATUSES.ON_SITE);
+    await waitFor(async () => {
+      const updated = await repository.findDetail('3');
+
+      expect(updated.completedSteps).toContain(TICKET_WORKFLOW_STEPS.ARRIVE);
     }, WAIT);
 
-    // La ruta vuelve a entregar el ticket ya actualizado.
+    // La ruta vuelve a entregar el ticket ya actualizado. Qué estado le corresponde
+    // ahora lo decide el servicio de NestJS, no esta pantalla ni este doble.
+    await loadDetails();
+
     rerender(
       <QueryClientProvider client={new QueryClient()}>
         <TicketWorkspace ticket={detailOf('3')} />
@@ -334,9 +375,10 @@ describe('flujo del técnico', () => {
     expect(intervention.queryByRole('button')).not.toBeInTheDocument();
   });
 
-  it('con la intervención cerrada no queda ninguna acción', () => {
+  it('con la intervención cerrada no queda ninguna acción', async () => {
     // El ticket 6 está resuelto y solo le falta cerrar: se cierra y ya no hay nada.
-    ticketStore.completeStep('6', TICKET_WORKFLOW_STEPS.CLOSE, ACTOR);
+    await repository.completeWorkflowStep('6', TICKET_WORKFLOW_STEPS.CLOSE);
+    await loadDetails();
 
     renderWorkspace(detailOf('6'));
     const intervention = within(section('Intervención'));

@@ -35,6 +35,8 @@ lo justifican. El release en curso tendrá su propio archivo.
 
 @RELEASE_0.7_TICKET_WORKSPACE.md
 
+@RELEASE_0.8_DATA_PROVIDER.md
+
 ## Cómo se trabaja
 
 @MVP_PLAYBOOK.md
@@ -84,16 +86,18 @@ registradas en la sección 4 de PROJECT_STATUS.md.
 
 Antes de crear un archivo nuevo, comprobar si ya existe su sitio:
 
-| Necesito                          | Va en                                        |
-| --------------------------------- | -------------------------------------------- |
-| Algo reutilizable sin dominio     | `apps/web/src/shared/`                       |
-| Algo que conoce un dominio        | `apps/web/src/features/<dominio>/`           |
-| Una tabla                         | `DataTable`, o `AdvancedTable` si es Tickets |
-| Un formulario                     | `EntityModal` + `EntityForm` + `FormField`   |
-| Otra forma de ver un módulo       | `features/<dominio>/views/` y su registro    |
-| Una sección de una pantalla ficha | `DetailSection` + `DetailField`              |
-| Acceso a datos en el backend      | Repository + Provider del módulo             |
-| Un tipo que cruzan API y frontend | `packages/contracts/`                        |
+| Necesito                          | Va en                                             |
+| --------------------------------- | ------------------------------------------------- |
+| Algo reutilizable sin dominio     | `apps/web/src/shared/`                            |
+| Algo que conoce un dominio        | `apps/web/src/features/<dominio>/`                |
+| Una tabla                         | `DataTable`, o `AdvancedTable` si es Tickets      |
+| Un formulario                     | `EntityModal` + `EntityForm` + `FormField`        |
+| Otra forma de ver un módulo       | `features/<dominio>/views/` y su registro         |
+| Una sección de una pantalla ficha | `DetailSection` + `DetailField`                   |
+| Acceso a datos en el backend      | Repository + Provider del módulo                  |
+| Un origen de datos nuevo          | Un Provider más una entrada en su registro        |
+| Un tipo que cruzan API y frontend | `packages/contracts/`                             |
+| Datos de ejemplo para pruebas web | `apps/web/src/test/`, nunca dentro de una feature |
 
 Los detalles y el por qué están en CODING_STANDARDS.md y en
 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).

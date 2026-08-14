@@ -11,10 +11,12 @@ import { PermissionsGuard } from './common/guards/permissions.guard';
 import { PrismaModule } from './infrastructure/prisma/prisma.module';
 import { ActivityLogModule } from './modules/activity-log/activity-log.module';
 import { AuthModule } from './modules/auth/auth.module';
+import { DataSourcesModule } from './modules/data-sources/data-sources.module';
 import { HealthModule } from './modules/health/health.module';
 import { PermissionsModule } from './modules/permissions/permissions.module';
 import { RolesModule } from './modules/roles/roles.module';
 import { SecurityModule } from './modules/security/security.module';
+import { TicketsModule } from './modules/tickets/tickets.module';
 import { UsersModule } from './modules/users/users.module';
 
 @Module({
@@ -49,6 +51,8 @@ import { UsersModule } from './modules/users/users.module';
     RolesModule,
     PermissionsModule,
     SecurityModule,
+    DataSourcesModule,
+    TicketsModule,
     ActivityLogModule,
   ],
   providers: [

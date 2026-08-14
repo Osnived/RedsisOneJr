@@ -54,6 +54,33 @@ export const TICKET_PRIORITY_LABELS: Record<TicketPriority, string> = {
   critica: 'Crítica',
 };
 
+/**
+ * Valor de un dato adicional del proveedor.
+ *
+ * Es escalar a propósito. Una celda de tabla muestra un valor, y ordenar, filtrar
+ * y agrupar solo tienen sentido sobre algo comparable; admitir objetos anidados
+ * obligaría a que el framework de tablas supiera recorrerlos. Un proveedor que
+ * entregue estructura la aplana o la serializa en su Adapter, que es donde vive
+ * ese conocimiento.
+ *
+ * `null` significa que el dato existe en la estructura y está vacío, que no es lo
+ * mismo que no existir.
+ */
+export type TicketMetadataValue = string | number | boolean | null;
+
+/**
+ * Datos adicionales que entrega el proveedor y que el modelo no nombra.
+ *
+ * Existe para no perder información: RedsisOne, Baserow y ServiceNow tienen cada
+ * uno columnas propias, y descartar lo que no encaja en el modelo obligaría a
+ * ampliarlo cada vez que un cliente añade un campo.
+ *
+ * Las claves son identificadores de columna **de nuestro lado** —los espacios de
+ * `CUSTOM_COLUMN_SLOTS`—, nunca los del proveedor: qué campo del origen alimenta
+ * cada uno lo resuelve el Adapter en el backend.
+ */
+export type TicketMetadata = Readonly<Record<string, TicketMetadataValue>>;
+
 export interface Ticket {
   id: string;
 
@@ -63,9 +90,21 @@ export interface Ticket {
    */
   number: string;
 
+  /**
+   * Resumen corto del servicio. Nulo cuando el origen no lo aporta.
+   *
+   * Los campos que un proveedor puede no tener se declaran anulables en lugar de
+   * opcionales: un `null` explícito dice "este origen no lo trae", mientras que un
+   * campo ausente obliga a cada consumidor a decidir qué significa su falta.
+   */
+  title: string | null;
+
   clientName: string;
   branchName: string;
   city: string;
+
+  /** Zona de trabajo de la sucursal (ver PROJECT_CONTEXT.md). */
+  zoneName: string | null;
 
   status: TicketStatus;
   priority: TicketPriority;
@@ -76,6 +115,9 @@ export interface Ticket {
   /** Fechas en formato ISO 8601, igual que el resto de los contratos. */
   createdAt: string;
   updatedAt: string;
+
+  /** Datos propios del proveedor. Vacío cuando el origen no aporta ninguno. */
+  metadata: TicketMetadata;
 }
 
 /**
@@ -148,8 +190,14 @@ export interface TicketDetail extends Ticket {
   /** Dirección de la sucursal donde se atiende el servicio. */
   address: string;
 
-  /** Zona de trabajo a la que pertenece la sucursal (ver PROJECT_CONTEXT.md). */
-  zoneName: string;
+  /**
+   * Relato completo de la incidencia. Nulo cuando el origen no lo aporta.
+   *
+   * Está aquí y no en `Ticket` porque es texto largo —los orígenes reales meten
+   * ahí datos de contacto, modelo del equipo y descripción de la falla— y ninguna
+   * tabla lo muestra. El resumen corto que sí cabe en una fila es `title`.
+   */
+  description: string | null;
 
   categoryName: string;
 

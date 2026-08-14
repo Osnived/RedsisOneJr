@@ -20,14 +20,17 @@ import { DataTable } from './data-table';
 const TICKET: Ticket = {
   id: 'ticket-1',
   number: 'INC-2026-000145',
+  title: 'Equipo fuera de servicio',
   clientName: 'Banco Central',
   branchName: 'Sucursal Norte',
   city: 'Bogotá',
+  zoneName: 'Zona Centro',
   status: TICKET_STATUSES.ON_ROUTE,
   priority: TICKET_PRIORITIES.CRITICAL,
   technicianName: 'Ana Pérez',
   createdAt: '2026-07-01T10:00:00.000Z',
   updatedAt: '2026-07-15T18:30:00.000Z',
+  metadata: {},
 };
 
 const USER: UserSummary = {

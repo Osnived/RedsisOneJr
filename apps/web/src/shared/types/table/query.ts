@@ -1,25 +1,19 @@
-import type { AdvancedFilter } from './filter';
+import type { DataQuery, QuerySort } from '@redsis/contracts';
 
 /**
  * Estado de consulta de una tabla.
  *
- * En modo servidor este estado se envía al backend; en modo cliente lo resuelve
- * el propio motor. La forma es la misma en ambos casos para que una pantalla
- * pueda pasar de un modo a otro sin cambiar su contrato.
+ * En modo servidor este estado **viaja a la API**, así que su forma vive en los
+ * contratos compartidos y aquí solo se le pone el nombre con el que se habla de él
+ * dentro del framework de tablas. Declararla en dos sitios permitiría que la tabla
+ * pidiera algo que el servidor no sabe interpretar.
+ *
+ * En modo cliente la resuelve el propio motor. La forma es la misma en ambos casos
+ * para que una pantalla pueda pasar de un modo a otro sin cambiar su contrato.
  */
-export interface TableSort {
-  id: string;
-  desc: boolean;
-}
+export type TableSort = QuerySort;
 
-export interface TableQuery {
-  page: number;
-  pageSize: number;
-  sorting: TableSort[];
-  search: string;
-  /** Condiciones del constructor de filtros, combinadas con Y. */
-  filters: AdvancedFilter[];
-}
+export type TableQuery = DataQuery;
 
 /**
  * Modo de operación:
